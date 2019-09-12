@@ -1,0 +1,32 @@
+# General things to ignore
+*~
+*.swp
+*.un~
+*_bak
+*test*
+*tmp*
+# Emacs tmp files
+.#*
+# large files
+*.npy
+
+venv/
+build/
+dist/
+mcmc/
+# Python
+*.py[cod]
+**/__pycache__
+*.egg
+*.egg-info/
+
+# IPython
+**/.ipynb_checkpoints
+*.ipynb
+
+# C/C++
+*.o
+*.so
+
+#backup
+back/
