@@ -127,11 +127,12 @@ def calc_mass(r_array,t_array,ne_array,p_eta):
     a=p_eta[0]
     b=p_eta[1]
     c=p_eta[2]
+    tmp_const=1/G/mu/mp/Msun*kpc*kev
     for i in range(len(r_array)):
         r0=r_array[i]
-        eta=0.0+1.0*a*(1+numpy.exp(-numpy.power(r0/R200M/b,c)))
-        detadr=a*numpy.exp(-numpy.power(r0/R200M/b,c))*\
-                c*-numpy.power(r0/R200M/b,c-1)/R200M/b
+        eta=0.0+1.0*a*(1+math.exp(-math.pow(r0/R200M/b,c)))
+        detadr=a*math.exp(-math.pow(r0/R200M/b,c))*\
+                c*-math.pow(r0/R200M/b,c-1)/R200M/b
         detadr=1.0*detadr
 #        eta=1
 #        detadr=0
@@ -139,12 +140,12 @@ def calc_mass(r_array,t_array,ne_array,p_eta):
             dTdr=(t_array[i+1]-t_array[i])/(r_array[i+1]-r_array[i])
             dnedr=(ne_array[i+1]-ne_array[i])/(r_array[i+1]-r_array[i])
             z1=(dnedr*t_array[i]/ne_array[i]+dTdr-t_array[i]/eta*detadr)/eta #kev/kpc
-            mass=-z1/G/mu/mp*r0*r0/Msun*kpc*kev #Msun
+            mass=-z1*r0*r0*tmp_const #Msun
         elif i==len(r_array)-1:
             dTdr=(t_array[i]-t_array[i-1])/(r_array[i]-r_array[i-1])
             dnedr=(ne_array[i]-ne_array[i-1])/(r_array[i]-r_array[i-1])
             z1=(dnedr*t_array[i]/ne_array[i]+dTdr-t_array[i]/eta*detadr)/eta #kev/kpc
-            mass=-z1/G/mu/mp*r0*r0/Msun*kpc*kev #Msun
+            mass=-z1*r0*r0*tmp_const #Msun
         else:
             dTdr_r=(t_array[i+1]-t_array[i])/(r_array[i+1]-r_array[i])
             dnedr_r=(ne_array[i+1]-ne_array[i])/(r_array[i+1]-r_array[i])
@@ -153,7 +154,7 @@ def calc_mass(r_array,t_array,ne_array,p_eta):
             dTdr=(dTdr_l+dTdr_r)/2
             dnedr=(dnedr_l+dnedr_r)/2
             z1=(dnedr*t_array[i]/ne_array[i]+dTdr-t_array[i]/eta*detadr)/eta #kev/kpc
-            mass=-z1/G/mu/mp*r0*r0/Msun*kpc*kev #Msun
+            mass=-z1*r0*r0*tmp_const #Msun
         if mass<=1e7:
             mass=1e7
         mass_array.append(mass)
@@ -168,8 +169,9 @@ rsbp_array=[]
 rsbpe_array=[]
 sbp_array=[]
 sbpe_array=[]
+flag_tproj_array=[]
 for i in open(sys.argv[1]):
-    r,rer,t,te=i.split()
+    r,rer,t,te,flag_tproj=i.split()
     r=float(r)
     rer=float(rer)
     t=float(t)
@@ -178,6 +180,7 @@ for i in open(sys.argv[1]):
     re_array.append(rer)
     t_array.append(t)
     te_array.append(te)
+    flag_tproj_array.append(flag_tproj)
 
 
 #r_array=numpy.array(r_array)
@@ -472,6 +475,7 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
             ne_cl_array[i]=ne_array[i]
     ne_array=numpy.insert(ne_array,0,0.0)
     ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
+    T_array=numpy.insert(T_array,0,0.0)
     rtmp=numpy.array(list(range(45)))
     rmass_array=30*numpy.power(1.11,rtmp)
     for i in range(len(rmass_array)):
@@ -505,7 +509,10 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
             if rne_array[j]>r_array[i]:
                 r_this=j
                 break
-        t_this=T_array[r_this]
+        if flag_tproj_array[i]=='1':
+            t_this=T_array[r_this]
+        else:
+            t_this=deproject_model.calc_projT(r_array[i],tmp_array,T_array,ne_array)
         te_tmp=te_array[i]+t_array[i]*0.0
         if flag_print==1:
             print(t_this,t_array[i])
@@ -590,6 +597,7 @@ numpy.save('p_all',p_all_f)
 #print result
 
 SUM_T_array=[]
+SUM_Tproj_array=[]
 SUM_ne_array=[]
 SUM_sbp_fit=[]
 SUM_k_array=[]
@@ -621,7 +629,6 @@ for i in range(len(ne0_f)):
     T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
     SUM_T_array.append(T_array)
     p1=[*p,T_array]
-    y0=np.power(K_ARRAY_FIT[0]/T_array[0],-1.5)
     ne_array=[]
     ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
     SUM_ne_array.append(ne_array)
@@ -639,13 +646,17 @@ for i in range(len(ne0_f)):
     ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
     SUM_ne_cl_array.append(ne_cl_array)
     ne_array=numpy.insert(ne_array,0,0.0)
+    T_array=numpy.insert(T_array,0,0.0)
     sbp_fit=[]
-    tmp_r_use=rne_array
+    t2d_array=[]
     for j in rne_array:
         a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
         a=a+sbp_c_f[i]
+        t2d=deproject_model.calc_projT(j,tmp_array,T_array,ne_array)
         sbp_fit.append(a)
+        t2d_array.append(t2d)
     SUM_sbp_fit.append(sbp_fit)
+    SUM_Tproj_array.append(t2d_array)
     k_array_fitted=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     SUM_kfit_array.append(k_array_fitted)
 IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
@@ -658,6 +669,11 @@ T_16_ARRAY=[]
 T_50_ARRAY=[]
 T_84_ARRAY=[]
 T_90_ARRAY=[]
+TPROJ_10_ARRAY=[]
+TPROJ_16_ARRAY=[]
+TPROJ_50_ARRAY=[]
+TPROJ_84_ARRAY=[]
+TPROJ_90_ARRAY=[]
 DEN_10_ARRAY=[]
 DEN_16_ARRAY=[]
 DEN_50_ARRAY=[]
@@ -702,8 +718,10 @@ for i in range(len(rne_array)):
     tmp_kfit_array=[]
     tmp_m_array=[]
     tmp_mfit_array=[]
+    tmp_t2d_array=[]
     for j in range(len(ne0_f)):
         tmp_t_array.append(SUM_T_array[j][i])
+        tmp_t2d_array.append(SUM_Tproj_array[j][i])
         tmp_den_array.append(SUM_ne_array[j][i])
         tmp_den_cl_array.append(SUM_ne_cl_array[j][i])
         tmp_sbp_array.append(SUM_sbp_fit[j][i])
@@ -711,6 +729,7 @@ for i in range(len(rne_array)):
         tmp_m_array.append(SUM_mass_array[j][i])
         tmp_mfit_array.append(SUM_nfw_fit_array[j][i])
     tmp_t_array.sort()
+    tmp_t2d_array.sort()
     tmp_den_array.sort()
     tmp_den_cl_array.sort()
     tmp_sbp_array.sort()
@@ -732,6 +751,11 @@ for i in range(len(rne_array)):
     T_50_ARRAY.append(tmp_t_array[IND_50])
     T_84_ARRAY.append(tmp_t_array[IND_84])
     T_90_ARRAY.append(tmp_t_array[IND_90])
+    TPROJ_10_ARRAY.append(tmp_t2d_array[IND_10])
+    TPROJ_16_ARRAY.append(tmp_t2d_array[IND_16])
+    TPROJ_50_ARRAY.append(tmp_t2d_array[IND_50])
+    TPROJ_84_ARRAY.append(tmp_t2d_array[IND_84])
+    TPROJ_90_ARRAY.append(tmp_t2d_array[IND_90])
     SBP_10_ARRAY.append(tmp_sbp_array[IND_10])
     SBP_16_ARRAY.append(tmp_sbp_array[IND_16])
     SBP_50_ARRAY.append(tmp_sbp_array[IND_50])
@@ -765,6 +789,7 @@ dat={
         "sbp": [sbp_array,sbpe_array],
         "radius_model": radius_model,
         "temperature_model": [T_50_ARRAY,T_16_ARRAY,T_84_ARRAY,T_10_ARRAY,T_90_ARRAY],
+        "projected_temperature": [TPROJ_50_ARRAY,TPROJ_16_ARRAY,TPROJ_84_ARRAY,TPROJ_10_ARRAY,TPROJ_90_ARRAY],
         "sbp_model": [SBP_50_ARRAY,SBP_16_ARRAY,SBP_84_ARRAY,SBP_10_ARRAY,SBP_90_ARRAY],
         "den_model": [DEN_50_ARRAY,DEN_16_ARRAY,DEN_84_ARRAY,DEN_10_ARRAY,DEN_90_ARRAY],
         "den_cl_model": [DEN_CL_50_ARRAY,DEN_CL_16_ARRAY,DEN_CL_84_ARRAY,DEN_CL_10_ARRAY,DEN_CL_90_ARRAY],
@@ -784,9 +809,9 @@ sbpe_array=sbp_array*0.05+sbpe_array
 te_array=t_array*0.05+te_array
 
 plt.clf()
-plt.loglog(tmp_r_use,SBP_84_ARRAY,color='grey')
-plt.loglog(tmp_r_use,SBP_50_ARRAY,'b')
-plt.loglog(tmp_r_use,SBP_16_ARRAY,color='grey')
+plt.loglog(rne_array,SBP_84_ARRAY,color='grey')
+plt.loglog(rne_array,SBP_50_ARRAY,'b')
+plt.loglog(rne_array,SBP_16_ARRAY,color='grey')
 plt.fill_between(rne_array,SBP_16_ARRAY,SBP_84_ARRAY,color='grey')
 plt.errorbar(rsbp_array,sbp_array,xerr=rsbpe_array,yerr=sbpe_array,color='k',linestyle='none')
 plt.xlabel(name+'_Radius(kpc)')
@@ -798,8 +823,31 @@ plt.clf()
 plt.plot(rne_array,T_84_ARRAY,color='grey')
 plt.plot(rne_array,T_50_ARRAY,'b')
 plt.plot(rne_array,T_16_ARRAY,color='grey')
+plt.plot(rne_array,TPROJ_50_ARRAY,'b-')
 plt.fill_between(rne_array,T_16_ARRAY,T_84_ARRAY,color='grey')
-plt.errorbar(r_array,t_array,xerr=re_array,yerr=te_array,color='k',linestyle='none')
+plt.fill_between(rne_array,TPROJ_16_ARRAY,TPROJ_84_ARRAY,color='green',alpha=0.5)
+r1_array=[]
+r2_array=[]
+t2_array=[]
+t1_array=[]
+re1_array=[]
+te1_array=[]
+re2_array=[]
+te2_array=[]
+for i in range(len(r_array)):
+    if flag_tproj_array[i]=='1':
+        r1_array.append(r_array[i])
+        t1_array.append(t_array[i])
+        re1_array.append(re_array[i])
+        te1_array.append(te_array[i])
+    else:
+        r2_array.append(r_array[i])
+        t2_array.append(t_array[i])
+        re2_array.append(re_array[i])
+        te2_array.append(te_array[i])
+
+plt.errorbar(r1_array,t1_array,xerr=re1_array,yerr=te1_array,color='k',linestyle='none')
+plt.errorbar(r2_array,t2_array,xerr=re2_array,yerr=te2_array,color='orange',linestyle='none')
 plt.xlabel(name+'_Radius(kpc)')
 plt.ylabel('Temperature(keV)')
 plt.savefig('temperature.pdf',dpi=100)

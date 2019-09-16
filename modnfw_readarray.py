@@ -8,7 +8,7 @@ import sys
 #linear interpolation
 pi=3.1415926
 def lintp(x,x1,x2,y1,y2):
-    if x>=x1-1e-10 and x<=x2+1e10:
+    if x>=x1-1e-10 and x<=x2+1e-10:
         return y1+(y2-y1)/(x2-x1)*(x-x1)
     else :
         return np.nan
