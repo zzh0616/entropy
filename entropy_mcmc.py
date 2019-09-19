@@ -437,7 +437,12 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         return np.nan
     lhood=0
     lhood=lhood+gpob((cp_e+cp_p)/(cp_e-cp_p),-0.01,0.03)
-    lhood=lhood+gpob((kmod_a-a0)/kmod_a,0,1)
+    if kmod_a-a0<=0:
+        lhood=lhood+gpob((kmod_a-a0)/kmod_a,0,1)
+    kmod_test=entropy_model(2000,kmod_a,kmod_b,kmod_c,kmod_k0)
+    kth_test=a0*2000**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.3)
     if rho<RHO_0:
         lhood=lhood+gpob(np.log(rho),np.log(RHO_0),1)
     y0=[ne0]
@@ -823,7 +828,7 @@ plt.clf()
 plt.plot(rne_array,T_84_ARRAY,color='grey')
 plt.plot(rne_array,T_50_ARRAY,'b')
 plt.plot(rne_array,T_16_ARRAY,color='grey')
-plt.plot(rne_array,TPROJ_50_ARRAY,'b-')
+plt.plot(rne_array,TPROJ_50_ARRAY,color='yellow')
 plt.fill_between(rne_array,T_16_ARRAY,T_84_ARRAY,color='grey')
 plt.fill_between(rne_array,TPROJ_16_ARRAY,TPROJ_84_ARRAY,color='green',alpha=0.5)
 r1_array=[]

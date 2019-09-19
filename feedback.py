@@ -95,7 +95,7 @@ def radius_calc(r_array,m_array,kmodel_array,fb,ne_array,nth_array,plot_flag=0):
         plt.plot(rold_array,mg_old_array,'k')
         plt.plot(r_array,mg_new_array,'b')
         plt.show()
-    return rold_array
+    return rold_array,pgold_array
 
 def kmodel(r,a,b,c):
     k_this=a*np.power(r,b)+c
@@ -159,15 +159,20 @@ def main():
             gamma0=float(i.split(',')[1])
         if re.match(r'^k0,',i):
             k0=float(i.split(',')[1])
+        if re.match(r'^n3,',i):
+            n3=float(i.split(',')[1])
     global r_array,m_array,fb,nth_array,kth_array,ne_array
     r_array=np.array(dat['radius_model'],dtype=float)
     m_array=np.array(dat['m_fit'][0],dtype=float)
+    T_array=np.array(dat['temperature_model'][0],dtype=float)
     r200=np.float(dat['r200'])
 #    a0=1.6
 #    gamma0=0.97
 #    k0=100
     kth_array=kmodel(r_array,a0,gamma0,k0)
-    fb=0.16
+    fb=0.15
+    mue=1.16
+    mu=0.6
     ne_array=np.array(dat['den_model'][0],dtype=float)
     t_array=np.array(dat['temperature_model'][0],dtype=float)
 #    r200=float(sys.argv[3])
@@ -183,16 +188,21 @@ def main():
   #  a1,gamma1,k1=[1.3,1.025,220]
   #  p=[a1,gamma1,k1]
     kmodel_array=kmodel(r_array,a0f,gamma0f,k0f)
-    r_old_array=radius_calc(r_array,m_array,kmodel_array,fb,ne_array,nth_array,0)
+    r_old_array,p_old_array=radius_calc(r_array,m_array,kmodel_array,fb,ne_array,nth_array,0)
+    nth_array_old=nth_calc(r_old_array,nth_a,nth_b,nth_gamma,r200)
     kold_array=kmodel(r_old_array,a0f,gamma0f,k0f)
     kcompare_array=kmodel(r_array,a0,gamma0,k0)
-#    plt.plot(kold_array/kcompare_array)
+    ng_old_array=np.power(p_old_array/kold_array,0.6)*(mue/mu)**0.4
+    T_old_array=p_old_array/ng_old_array
+#    plt.plot(r_old_array,T_old_array)
 #    plt.show()
     kobs_array=np.array(dat['k_fit'][0],dtype=float)
     count=0
     flag=0
     dq_array=[]
     Eg_array=[]
+    dEtot_array=[]
+    dEw_array=[]
     pi=3.1415926
     Msun=2e30
     kpc=3.086e19
@@ -207,6 +217,8 @@ def main():
         if flag==1:
             dq_array.append(np.NAN)
             Eg_array.append(np.NAN)
+            dEw_array.append(np.NAN)
+            dEtot_array.append(np.NAN)
             continue
         while r_old_array[count]<=r_array[i] or r_old_array[count]==np.NAN:
             if count>=len(r_old_array)-1:
@@ -215,16 +227,24 @@ def main():
             count=count+1
         Mold=m_array[count]
         Mnow=m_array[i]
-        dq=n2*1.5*(kobs-kold)/kobs
-        Eg=G*mu*mp*(-Mnow/r_array[i]+Mold/r_old_array[i])*Msun/kpc/kev
+        dq=n2*1.5*(kobs-kold)/kobs  #kev per particle
+        Eg=-G*mu*mp*(-Mnow/r_array[i]+Mold/r_old_array[i])*Msun/kpc/kev
+        dEtot=1.5*(T_array[i]/nth_array[i]-T_old_array[i]/nth_array_old[i])
+        dEw=1.5*n3*(T_array[i]-T_old_array[i])
         dq_array.append(dq)
         Eg_array.append(Eg)
+        dEw_array.append(dEw)
+        dEtot_array.append(dEtot)
     dq_array=np.array(dq_array)
     Eg_array=np.array(Eg_array)
+    dEw_array=np.array(dEw_array)
+    dEtot_array=np.array(dEtot_array)
 #    plt.plot(r_array,r_old_array)
 #    plt.show()
     plt.plot(r_array,dq_array,'r',label='extra heating(dQ)')
     plt.plot(r_array,Eg_array,'g',label='gravity')
+    plt.plot(r_array,dEw_array,label='work')
+    plt.plot(r_array,dEtot_array,label='total energy')
 #    plt.savefig('E_ICM.pdf')
     #calculate Lx
     cfunc_file=sys.argv[3]
@@ -261,7 +281,7 @@ def main():
     lx_array=np.array(lx_array)
 #    print(lx_array.sum())
     EL_array=np.array(EL_array)
-    Efeed_array=EL_array+Eg_array+dq_array
+    Efeed_array=EL_array+dEtot_array-Eg_array-dEw_array+dq_array*0
     plt.plot(r_array,EL_array,'b',label='radiation')
     plt.plot(r_array,Efeed_array,'k',label='total feedback')
     plt.xlabel('radius (kpc)')
@@ -287,7 +307,7 @@ def poss(a0,gamma0,k0):
     a0=np.abs(a0)
     gamma0=np.abs(gamma0)
     kmodel_array=kmodel(r_array,a0,gamma0,k0)
-    r_old_array=radius_calc(r_array,m_array,kmodel_array,fb,ne_array,nth_array)
+    r_old_array,xtmp=radius_calc(r_array,m_array,kmodel_array,fb,ne_array,nth_array)
     count=0
     rnow=0
     like=0
