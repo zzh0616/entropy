@@ -30,3 +30,6 @@ mcmc/
 
 #backup
 back/
+
+#local file
+all.sh
