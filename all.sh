@@ -69,6 +69,7 @@ else
 fi
 
 ${SCRIP_DIR}/coolfunc_calc.sh  T_dump_tmp.dat ${ABUND_DUMP_FILE} ${NH_DUMP_FILE} ${REDSHIFT} cfunc_for_density_fit_cnt.txt ${E_LOW} ${E_HIGH} cfunc_for_density_fit_erg.txt
+${SCRIP_DIR}/coolfunc_calc.sh  T_dump_tmp.dat ${ABUND_DUMP_FILE} ${NH_DUMP_FILE} ${REDSHIFT} cfunc_for_chandra_density_fit_cnt.txt 0.7 7.0 cfunc_for_chandra_density_fit_erg.txt
 if [ "${FLAG}" = "OLD" ]; then
     cp cfunc_for_densit_fit_cnt.txt cfunc_for_density_fit.txt
 fi
@@ -110,7 +111,7 @@ else
     CFUNC_FILE="cfunc_for_density_fit.txt"
 fi
 echo "${TEMP_DATA_FILE} ${SBP_DATA_FILE} ${CFUNC_FILE} ${CM_PER_PIXEL}"
-${SCRIP_DIR}/entropy_mcmc.py ${TEMP_DATA_FILE} param_entropy.txt ${SBP_DATA_FILE} ${CFUNC_FILE} ${CM_PER_PIXEL} 
+${SCRIP_DIR}/entropy_mcmc.py ${TEMP_DATA_FILE} param_entropy.txt ${SBP_DATA_FILE} ${CFUNC_FILE} ${CM_PER_PIXEL} cfunc_for_chandra_density_fit_cnt.txt
 
 mv temperature.pdf ${3}_temp.pdf
 mv sbp.pdf ${3}_sbp.pdf
@@ -118,3 +119,4 @@ mv entropy.pdf ${3}_entropy.pdf
 mv result.csv ${3}_result.csv
 mv array_plt.json ${3}_plt.json
 mv mass.pdf ${3}_mass.pdf
+mv csbp.pdf ${3}_csbp.pdf

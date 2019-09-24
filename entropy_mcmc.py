@@ -169,7 +169,12 @@ rsbp_array=[]
 rsbpe_array=[]
 sbp_array=[]
 sbpe_array=[]
+rcsbp_array=[]
+rcsbpe_array=[]
+csbp_array=[]
+csbpe_array=[]
 flag_tproj_array=[]
+f_sbp_array=[]
 for i in open(sys.argv[1]):
     r,rer,t,te,flag_tproj=i.split()
     r=float(r)
@@ -189,15 +194,22 @@ for i in open(sys.argv[1]):
 #te_array=numpy.array(te_array)
 
 for i in open(sys.argv[3]):
-    r,rer,sbp,sbpe=i.split()
+    r,rer,sbp,sbpe,f_sbp=i.split()
     r=float(r)
     rer=float(rer)
     sbp=float(sbp)
     sbpe=float(sbpe)
-    rsbp_array.append(r)
-    rsbpe_array.append(rer)
-    sbp_array.append(sbp)
-    sbpe_array.append(sbpe)
+    if f_sbp=='c':
+        rcsbp_array.append(r)
+        rcsbpe_array.append(rer)
+        csbp_array.append(sbp)
+        csbpe_array.append(sbpe)
+    else:
+        rsbp_array.append(r)
+        rsbpe_array.append(rer)
+        sbp_array.append(sbp)
+        sbpe_array.append(sbpe)
+    f_sbp_array.append(f_sbp)
 #rsbp_array=numpy.array(rsbp_array)
 #rsbpe_array=numpy.array(rsbpe_array)
 #sbp_array=numpy.array(sbp_array)
@@ -350,6 +362,12 @@ cfunc_use_array=[]
 cfunc_ori_array.append(0)
 r_cfunc_array.append(0)
 cfunc_use_array.append(0)
+cfunc_cori_array=[]
+r_cfunc_c_array=[]
+cfunc_cuse_array=[]
+cfunc_cori_array.append(0)
+r_cfunc_c_array.append(0)
+cfunc_cuse_array.append(0)
 tmp1=list(range(1,11))
 tmp2=list(range(11,41,3))
 tmp3=list(range(41,3001,5))
@@ -359,14 +377,19 @@ rne_array=numpy.array(tmp1)
 for i in open(sys.argv[4]):
     r_cfunc_array.append(float(i.split()[0]))
     cfunc_ori_array.append(float(i.split()[1]))
+for i in open(sys.argv[6]):
+    r_cfunc_c_array.append(float(i.split()[0]))
+    cfunc_cori_array.append(float(i.split()[1]))
 for i in rne_array:
     if i==0:
         continue
     for j in range(len(r_cfunc_array)):
         if r_cfunc_array[j]>i:
             cfunc_use_array.append(cfunc_ori_array[j])
+            cfunc_cuse_array.append(cfunc_cori_array[j])
             break
 cfunc_use_array=numpy.array(cfunc_use_array)
+cfunc_cuse_array=np.array(cfunc_cuse_array)
 tmp_array=[]
 tmp_array.append(0)
 i_before=0
@@ -439,10 +462,14 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
     lhood=lhood+gpob((cp_e+cp_p)/(cp_e-cp_p),-0.01,0.03)
     if kmod_a-a0<=0:
         lhood=lhood+gpob((kmod_a-a0)/kmod_a,0,1)
-    kmod_test=entropy_model(2000,kmod_a,kmod_b,kmod_c,kmod_k0)
-    kth_test=a0*2000**gamma0+k0
+    kmod_test=entropy_model(1500,kmod_a,kmod_b,kmod_c,kmod_k0)
+    kth_test=a0*1500**gamma0+k0
     if kth_test>kmod_test:
         lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.3)
+    kmod_test=entropy_model(2500,kmod_a,kmod_b,kmod_c,kmod_k0)
+    kth_test=a0*2500**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
     if rho<RHO_0:
         lhood=lhood+gpob(np.log(rho),np.log(RHO_0),1)
     y0=[ne0]
@@ -536,6 +563,20 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
             lhood=lhood+gpob(sbp_this,tmp_sbp,tmp_sbpe)*1*SBP_FACTOR
         else:
             lhood=lhood+gpob(sbp_this,tmp_sbp,tmp_sbpe)*0.5*SBP_FACTOR
+    for i in range(len(rcsbp_array)):
+        sbp_this=deproject_model.calc_sb(rcsbp_array[i],tmp_array,ne_cl_array,cfunc_cuse_array,cm_per_pixel)
+        sbp_this=abs(sbp_this)
+#        sbp_this=sbp_this+sbp_c*0
+#        sbp_this=abs(sbp_this)
+        tmp_sbp=abs(csbp_array[i])
+#        tmp_sbpe=abs(numpy.log(1+sbpe_array[i]/sbp_array[i]))+0.05
+        tmp_sbpe=tmp_sbp*(csbpe_array[i]/csbp_array[i]+0.1)
+        if flag_print==1:
+            print(rcsbp_array[i],sbp_this,tmp_sbp,tmp_sbpe,sbp_this-tmp_sbp)
+        if rcsbp_array[i]>100:
+            lhood=lhood+gpob(sbp_this,tmp_sbp,tmp_sbpe)*1*SBP_FACTOR
+        else:
+            lhood=lhood+gpob(sbp_this,tmp_sbp,tmp_sbpe)*0.5*SBP_FACTOR
     return lhood
 M2=pymc.MCMC(set([T0,n2,rs,a0,gamma0,k0,n3,rho,ne0,sbp_c,temp_ne2,nth_a,nth_b,nth_gamma,kmod_a,kmod_b,kmod_c,kmod_k0,delta,delta2,cp_p,cp_e,cp_g0,cp_x0,cp_sigma,c4]),db='pickle',dbname='sampled.pickle')
 M2.db
@@ -605,6 +646,7 @@ SUM_T_array=[]
 SUM_Tproj_array=[]
 SUM_ne_array=[]
 SUM_sbp_fit=[]
+SUM_csbp_fit=[]
 SUM_k_array=[]
 SUM_kfit_array=[]
 SUM_nfw_fit_array=[]
@@ -654,14 +696,18 @@ for i in range(len(ne0_f)):
     T_array=numpy.insert(T_array,0,0.0)
     sbp_fit=[]
     t2d_array=[]
+    csbp_fit=[]
     for j in rne_array:
         a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
         a=a+sbp_c_f[i]
         t2d=deproject_model.calc_projT(j,tmp_array,T_array,ne_array)
         sbp_fit.append(a)
         t2d_array.append(t2d)
+        b=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_cuse_array,cm_per_pixel)
+        csbp_fit.append(b)
     SUM_sbp_fit.append(sbp_fit)
     SUM_Tproj_array.append(t2d_array)
+    SUM_csbp_fit.append(csbp_fit)
     k_array_fitted=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     SUM_kfit_array.append(k_array_fitted)
 IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
@@ -714,12 +760,18 @@ SBP_16_ARRAY=[]
 SBP_50_ARRAY=[]
 SBP_84_ARRAY=[]
 SBP_90_ARRAY=[]
+CSBP_10_ARRAY=[]
+CSBP_16_ARRAY=[]
+CSBP_50_ARRAY=[]
+CSBP_84_ARRAY=[]
+CSBP_90_ARRAY=[]
 for i in range(len(rne_array)):
     tmp_t_array=[]
     tmp_k_array=[]
     tmp_den_array=[]
     tmp_den_cl_array=[]
     tmp_sbp_array=[]
+    tmp_csbp_array=[]
     tmp_kfit_array=[]
     tmp_m_array=[]
     tmp_mfit_array=[]
@@ -730,6 +782,7 @@ for i in range(len(rne_array)):
         tmp_den_array.append(SUM_ne_array[j][i])
         tmp_den_cl_array.append(SUM_ne_cl_array[j][i])
         tmp_sbp_array.append(SUM_sbp_fit[j][i])
+        tmp_csbp_array.append(SUM_csbp_fit[j][i])
         tmp_kfit_array.append(SUM_kfit_array[j][i])
         tmp_m_array.append(SUM_mass_array[j][i])
         tmp_mfit_array.append(SUM_nfw_fit_array[j][i])
@@ -738,6 +791,7 @@ for i in range(len(rne_array)):
     tmp_den_array.sort()
     tmp_den_cl_array.sort()
     tmp_sbp_array.sort()
+    tmp_csbp_array.sort()
     tmp_kfit_array.sort()
     tmp_m_array.sort()
     tmp_mfit_array.sort()
@@ -766,6 +820,11 @@ for i in range(len(rne_array)):
     SBP_50_ARRAY.append(tmp_sbp_array[IND_50])
     SBP_84_ARRAY.append(tmp_sbp_array[IND_84])
     SBP_90_ARRAY.append(tmp_sbp_array[IND_90])
+    CSBP_10_ARRAY.append(tmp_csbp_array[IND_10])
+    CSBP_16_ARRAY.append(tmp_csbp_array[IND_16])
+    CSBP_50_ARRAY.append(tmp_csbp_array[IND_50])
+    CSBP_84_ARRAY.append(tmp_csbp_array[IND_84])
+    CSBP_90_ARRAY.append(tmp_csbp_array[IND_90])
     KFIT_10_ARRAY.append(tmp_kfit_array[IND_10])
     KFIT_16_ARRAY.append(tmp_kfit_array[IND_16])
     KFIT_50_ARRAY.append(tmp_kfit_array[IND_50])
@@ -796,6 +855,7 @@ dat={
         "temperature_model": [T_50_ARRAY,T_16_ARRAY,T_84_ARRAY,T_10_ARRAY,T_90_ARRAY],
         "projected_temperature": [TPROJ_50_ARRAY,TPROJ_16_ARRAY,TPROJ_84_ARRAY,TPROJ_10_ARRAY,TPROJ_90_ARRAY],
         "sbp_model": [SBP_50_ARRAY,SBP_16_ARRAY,SBP_84_ARRAY,SBP_10_ARRAY,SBP_90_ARRAY],
+        "csbp_model": [CSBP_50_ARRAY,CSBP_16_ARRAY,CSBP_84_ARRAY],
         "den_model": [DEN_50_ARRAY,DEN_16_ARRAY,DEN_84_ARRAY,DEN_10_ARRAY,DEN_90_ARRAY],
         "den_cl_model": [DEN_CL_50_ARRAY,DEN_CL_16_ARRAY,DEN_CL_84_ARRAY,DEN_CL_10_ARRAY,DEN_CL_90_ARRAY],
         "m_calc": [M_50_ARRAY,M_16_ARRAY,M_84_ARRAY,M_10_ARRAY,M_90_ARRAY],
@@ -808,6 +868,8 @@ fi.close()
 K_50_ARRAY=numpy.array(K_50_ARRAY)
 sbpe_array=numpy.array(sbpe_array)
 sbp_array=numpy.array(sbp_array)
+csbp_array=np.array(csbp_array)
+csbpe_array=np.array(csbpe_array)
 t_array=numpy.array(t_array)
 te_array=numpy.array(te_array)
 sbpe_array=sbp_array*0.05+sbpe_array
@@ -825,6 +887,16 @@ plt.savefig('sbp.pdf',dpi=100)
 
 
 plt.clf()
+plt.loglog(rne_array,CSBP_84_ARRAY,color='grey')
+plt.loglog(rne_array,CSBP_50_ARRAY,'b')
+plt.loglog(rne_array,CSBP_16_ARRAY,color='grey')
+plt.fill_between(rne_array,CSBP_16_ARRAY,CSBP_84_ARRAY,color='grey')
+plt.errorbar(rcsbp_array,csbp_array,xerr=rcsbpe_array,yerr=csbpe_array,color='k',linestyle='none')
+plt.xlabel(name+'_Radius(kpc)')
+plt.ylabel('SBP(cm^-2 pixel^-2 s^-1)')
+plt.savefig('csbp.pdf',dpi=100)
+plt.clf()
+
 plt.plot(rne_array,T_84_ARRAY,color='grey')
 plt.plot(rne_array,T_50_ARRAY,'b')
 plt.plot(rne_array,T_16_ARRAY,color='grey')
