@@ -465,11 +465,11 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
     kmod_test=entropy_model(1500,kmod_a,kmod_b,kmod_c,kmod_k0)
     kth_test=a0*1500**gamma0+k0
     if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.3)
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
     kmod_test=entropy_model(2500,kmod_a,kmod_b,kmod_c,kmod_k0)
     kth_test=a0*2500**gamma0+k0
     if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.05)
     if rho<RHO_0:
         lhood=lhood+gpob(np.log(rho),np.log(RHO_0),1)
     y0=[ne0]
