@@ -466,10 +466,14 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
     kth_test=a0*1500**gamma0+k0
     if kth_test>kmod_test:
         lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
+    kmod_test=entropy_model(2000,kmod_a,kmod_b,kmod_c,kmod_k0)
+    kth_test=a0*2000**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
     kmod_test=entropy_model(2500,kmod_a,kmod_b,kmod_c,kmod_k0)
     kth_test=a0*2500**gamma0+k0
     if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.05)
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.03)
     if rho<RHO_0:
         lhood=lhood+gpob(np.log(rho),np.log(RHO_0),1)
     y0=[ne0]
@@ -545,10 +549,10 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
             t_this=T_array[r_this]
         else:
             t_this=deproject_model.calc_projT(r_array[i],tmp_array,T_array,ne_array)
-        te_tmp=te_array[i]+t_array[i]*0.0
+        te_tmp=te_array[i]+t_array[i]*0.08
         if flag_print==1:
             print(t_this,t_array[i])
-        lhood=lhood+gpob(t_this,t_array[i],te_array[i])*1.3*T_FACTOR
+        lhood=lhood+gpob(t_this,t_array[i],te_tmp)*1.3*T_FACTOR
     for i in range(len(rsbp_array)):
         sbp_this=deproject_model.calc_sb(rsbp_array[i],tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
         sbp_this=abs(sbp_this)
@@ -873,7 +877,7 @@ csbpe_array=np.array(csbpe_array)
 t_array=numpy.array(t_array)
 te_array=numpy.array(te_array)
 sbpe_array=sbp_array*0.05+sbpe_array
-te_array=t_array*0.05+te_array
+te_array=t_array*0.07+te_array
 
 plt.clf()
 plt.loglog(rne_array,SBP_84_ARRAY,color='grey')
