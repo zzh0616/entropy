@@ -141,7 +141,7 @@ def test():
     nth_array=nth_calc(r_array,nth_a,nth_b,nth_gamma,r200)
     radius_calc(r_array,m_array,k_obs,fb,ne_array,nth_array)
 
-def main():
+def test2():
     fi=open(sys.argv[1])
     dat=json.load(fi)
     for i in open(sys.argv[2]):
@@ -300,6 +300,69 @@ def main():
             Efeed_tot=Efeed_tot+Efeed_array[i]*ne_array[i]*V_this*1.93
     print(Efeed_tot)
     return 0
+
+def main():
+    fi=open(sys.argv[1])
+    dat=json.load(fi)
+    param_file="p_all.npy"
+    p=np.load(param_file)
+    r_array=np.array(dat['radius_model'],dtype=float)
+    m_array=np.array(dat['m_fit'][0],dtype=float)
+    T_array=np.array(dat['temperature_model'][0],dtype=float)
+    ne_cl_array=np.array(dat['den_cl_model'][0],dtype=float)
+    r200=np.float(dat['r200'])
+    sum_dq_array=[]
+    ind_50=int(len(p[0])*0.5)
+    ind_84=int(len(p[0])*0.84)
+    ind_16=int(len(p[0])*0.16)
+    for i in range(len(p[0])):
+        a0=p[2][i]
+        k0=p[4][i]
+        gamma0=p[3][i]
+        kmod_a=p[15][i]
+        kmod_b=p[16][i]
+        kmod_c=p[17][i]
+        kmod_k0=p[18][i]
+        n2=p[0][i]
+        kobs=kmod_a*np.power(r_array,kmod_b)*np.exp(-kmod_c*r_array/r200)+kmod_k0
+        kth=a0*np.power(r_array,gamma0)+k0
+        dq_array=n2*T_array*(kobs-kth)/kobs
+        sum_dq_array.append(dq_array)
+    sum_dq_array.sort(0)
+    dq_array_center=sum_dq_array[ind_50]
+    dq_array_up=sum_dq_array[ind_84]
+    dq_array_down=sum_dq_array[ind_16]
+    cfunc_file=sys.argv[3]
+    dm=np.float(sys.argv[4])
+    r_cfunc_array=[]
+    cfunc_ori_array=[]
+    cfunc_lx_use_array=[]
+    for i in open(cfunc_file,'r'):
+        r_cfunc_array.append(float(i.split()[0]))
+        cfunc_ori_array.append(float(i.split()[1]))
+    for i in r_array:
+        i=float(i)
+        if i==0:
+            continue
+        for j in range(len(r_cfunc_array)):
+            if r_cfunc_array[j]>i:
+                cfunc_lx_use_array.append(cfunc_ori_array[j])
+                break
+    cfunc_lx_use_array=np.array(cfunc_lx_use_array)
+    lx_array=[]
+    EL_array=[]
+    Gyr=365.24*3600*24*1e9 #s
+    erg_to_kev=6.24e8
+    for i in range(len(r_array)):
+        if i == 0:
+            V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
+        else:
+            V_this=4/3*pi*(r_array[i]**3-r_array[i-1]**3)*kpc_per_cm**3
+        lx_this=ne_cl_array[i]**2/1.2*V_this*cfunc_lx_use_array[i]*4*pi*dm*dm
+        E_loss=lx_this*5*Gyr*erg_to_kev/(ne_array[i]*V_this*1.93)
+        lx_array.append(lx_this)
+        EL_array.append(E_loss)
+    lx_array=np.array(lx_array)
 
 def poss(a0,gamma0,k0):
 #   global r_array
