@@ -302,6 +302,14 @@ def test2():
     return 0
 
 def main():
+    pi=3.1416
+    Msun=2e30
+    kpc=3.086e19
+    kpc_per_cm=3.086e21
+    kev=1.6e-16
+    G=6.67e-11
+    mu=0.6
+    mp=1.027e-27
     fi=open(sys.argv[1])
     dat=json.load(fi)
     param_file="p_all.npy"
@@ -310,6 +318,9 @@ def main():
     m_array=np.array(dat['m_fit'][0],dtype=float)
     T_array=np.array(dat['temperature_model'][0],dtype=float)
     ne_cl_array=np.array(dat['den_cl_model'][0],dtype=float)
+    ne_array=np.array(dat['den_model'][0],dtype=float)
+    ne_cl_array_up=np.array(dat['den_cl_model'][2],dtype=float)
+    ne_cl_array_down=np.array(dat['den_cl_model'][1],dtype=float)
     r200=np.float(dat['r200'])
     sum_dq_array=[]
     ind_50=int(len(p[0])*0.5)
@@ -328,6 +339,7 @@ def main():
         kth=a0*np.power(r_array,gamma0)+k0
         dq_array=n2*T_array*(kobs-kth)/kobs
         sum_dq_array.append(dq_array)
+    sum_dq_array=np.array(sum_dq_array)
     sum_dq_array.sort(0)
     dq_array_center=sum_dq_array[ind_50]
     dq_array_up=sum_dq_array[ind_84]
@@ -350,7 +362,11 @@ def main():
                 break
     cfunc_lx_use_array=np.array(cfunc_lx_use_array)
     lx_array=[]
+    lx_array_up=[]
+    lx_array_down=[]
     EL_array=[]
+    EL_array_up=[]
+    EL_array_down=[]
     Gyr=365.24*3600*24*1e9 #s
     erg_to_kev=6.24e8
     for i in range(len(r_array)):
@@ -359,10 +375,47 @@ def main():
         else:
             V_this=4/3*pi*(r_array[i]**3-r_array[i-1]**3)*kpc_per_cm**3
         lx_this=ne_cl_array[i]**2/1.2*V_this*cfunc_lx_use_array[i]*4*pi*dm*dm
+        lx_up=ne_cl_array_up[i]**2/1.2*V_this*cfunc_lx_use_array[i]*4*pi*dm*dm
+        lx_down=ne_cl_array_down[i]**2/1.2*V_this*cfunc_lx_use_array[i]*4*pi*dm*dm
         E_loss=lx_this*5*Gyr*erg_to_kev/(ne_array[i]*V_this*1.93)
+        E_loss_up=lx_up*5*Gyr*erg_to_kev/(ne_array[i]*V_this*1.93)
+        E_loss_down=lx_down*5*Gyr*erg_to_kev/(ne_array[i]*V_this*1.93)
         lx_array.append(lx_this)
+        lx_array_up.append(lx_up)
+        lx_array_down.append(lx_down)
         EL_array.append(E_loss)
+        EL_array_up.append(E_loss_up)
+        EL_array_down.append(E_loss_down)
     lx_array=np.array(lx_array)
+    EL_array=np.array(EL_array)
+    EL_array_up=np.array(EL_array_up)
+    EL_array_down=np.array(EL_array_down)
+    Efeedback_array=EL_array+dq_array_center
+    Efeedback_up=EL_array_up+dq_array_up
+    Efeedback_down=EL_array_down+dq_array_down
+    plt.plot(r_array,dq_array_center,label='extra energy change')
+    plt.fill_between(r_array,dq_array_down,dq_array_up)
+    plt.plot(r_array,EL_array,'k',label='radiation')
+    plt.fill_between(r_array,EL_array_down,EL_array_up,color='k')
+    plt.plot(r_array,Efeedback_array,label='total feedback')
+    plt.fill_between(r_array,Efeedback_down,Efeedback_up)
+    plt.xlabel('radius (kpc)')
+    plt.ylabel('energy per particle (kev)')
+    name=sys.argv[1][0:-9]+'_feedback.pdf'
+    plt.xlim(1,2000)
+    plt.ylim(-5,5)
+    plt.legend()
+    plt.savefig(name)
+    Efeed_tot=0
+    for i in range(len(r_array)):
+        if r_array[i]<= 50:
+            if i==0:
+                V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
+            else:
+                V_this=4/3*pi*(r_array[i]**3-r_array[i-1]**3)*kpc_per_cm**3
+            Efeed_tot=Efeed_tot+Efeedback_array[i]*ne_array[i]*V_this*1.93
+    print(Efeed_tot)
+    np.save('Efeedback',Efeedback_array)
 
 def poss(a0,gamma0,k0):
 #   global r_array
