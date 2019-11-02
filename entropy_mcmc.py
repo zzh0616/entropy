@@ -160,7 +160,11 @@ def calc_mass(r_array,t_array,ne_array,p_eta):
         mass_array.append(mass)
     return mass_array
 def clumping_model(x,n1,n2,n3,n4,n5):
-    return numpy.power(1+x,n1)*numpy.exp(x*n2)+n3*numpy.exp(-(x-n4)*(x-n4)/n5)
+    tmp=numpy.power(1+x,n1)*numpy.exp(x*n2)+n3*numpy.exp(-(x-n4)*(x-n4)/n5)
+    for i in range(len(tmp)):
+        if tmp[i] < 1 :
+            tmp[i]=1
+    return tmp
 r_array=[]
 re_array=[]
 t_array=[]
@@ -417,7 +421,7 @@ kmod_k0=pymc.TruncatedNormal('kmod_k0',KMOD_K0,1/np.square(KMOD_K0ERR),0,np.inf,
 sbp_c=pymc.TruncatedNormal('sbp_c',SBP_C0,1/np.square(SBP_CERR),SBP_CMIN,SBP_CMAX,value=SBP_C0)
 delta=pymc.TruncatedNormal('delta',1.0,1/(0.12*0.12),0.5,1.5,value=1.0)
 delta2=pymc.TruncatedNormal('delta2',3.0,1/0.09,2,4.5,value=3.0)
-nth_a=pymc.TruncatedNormal('nth_a',NTH_A_0,1/np.square(NTH_A_ERR),0.1,0.5,value=NTH_A_0)
+nth_a=pymc.TruncatedNormal('nth_a',NTH_A_0,1/np.square(NTH_A_ERR),0.4,0.5,value=NTH_A_0)
 nth_b=pymc.TruncatedNormal('nth_b',NTH_B_0,1/np.square(NTH_B_ERR),0,np.inf,value=NTH_B_0)
 nth_gamma=pymc.TruncatedNormal('nth_gamma',NTH_GAMMA_0,1/np.square(NTH_GAMMA_ERR),0,np.inf,value=NTH_GAMMA_0)
 cp_p=pymc.TruncatedNormal('cp_p',-3.7,1,-10,10,value=-3.7)
@@ -474,6 +478,14 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
     kth_test=a0*2500**gamma0+k0
     if kth_test>kmod_test:
         lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.03)
+    kmod_test=entropy_model(1000,kmod_a,kmod_b,kmod_c,kmod_k0)
+    kth_test=a0*1000**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
+    kmod_test=entropy_model(500,kmod_a,kmod_b,kmod_c,kmod_k0)
+    kth_test=a0*500**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
     if rho<RHO_0:
         lhood=lhood+gpob(np.log(rho),np.log(RHO_0),1)
     y0=[ne0]
@@ -877,7 +889,7 @@ csbpe_array=np.array(csbpe_array)
 t_array=numpy.array(t_array)
 te_array=numpy.array(te_array)
 sbpe_array=sbp_array*0.05+sbpe_array
-te_array=t_array*0.07+te_array
+te_array=t_array*0.12+te_array
 
 plt.clf()
 plt.loglog(rne_array,SBP_84_ARRAY,color='grey')

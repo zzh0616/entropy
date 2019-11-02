@@ -34,7 +34,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
         json_file = name+"/"+name+"_plt.json"
         global_file= name + '/global.cfg'
         for i in open(global_file,'r'):
-            if the_re.match(r'^radius_sbp_file',i):
+            if the_re.match(r'^sbp_data_file',i):
                 sbp_file_tmp = i.split()[1]
         sbp_file= name +"/" + sbp_file_tmp
         fi=open(json_file,'r')
@@ -44,7 +44,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
         rsbp_array = []
         rsbpe_array = []
         for i in open(sbp_file):
-            [r, re, sbp, sbpe] = i.split()
+            [r, re, sbp, sbpe,flag_proj] = i.split()
             sbp_array.append(np.float(sbp))
             sbpe_array.append(np.float(sbpe))
             rsbp_array.append(np.float(r))
@@ -61,7 +61,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
         t_ave=t_array.mean()
         te_array = dat["temperature"][1]
         te_array = np.array(te_array)
-        te_array=te_array+t_array*0.06
+        te_array=te_array+t_array*0.12
         rt_array = dat["radius"][0]
         rt_array = np.array(rt_array)
         rte_array = dat["radius"][1]
@@ -77,6 +77,12 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
         sbp_fit_down = np.array(sbp_fit_down)
         sbp_fit_up = dat["sbp_model"][2]
         sbp_fit_up = np.array(sbp_fit_up)
+        csbp_fit = dat["csbp_model"][0]
+        csbp_fit = np.array(csbp_fit)
+        csbp_fit_down = dat["csbp_model"][1]
+        csbp_fit_down = np.array(csbp_fit_down)
+        csbp_fit_up = dat["csbp_model"][2]
+        csbp_fit_up = np.array(csbp_fit_up)
         k_fit = dat["k_fit"][0]
         k_fit = np.array(k_fit)
         k_fit_down = dat["k_fit"][1]
@@ -180,7 +186,11 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
             ax.loglog(r_model,sbp_fit_up)
             ax.loglog(r_model,sbp_fit_down)
             ax.fill_between(r_model,sbp_fit_down,sbp_fit_up,color='grey')
-            ax.set_ylabel('SBP (cm^-2 pixel^-2 s^-1)')
+            ax.loglog(r_model,csbp_fit)
+            ax.loglog(r_model,csbp_fit_up)
+            ax.loglog(r_model,csbp_fit_down)
+            ax.fill_between(r_model,csbp_fit_down,csbp_fit_up,color='grey')
+            ax.set_ylabel('SBP') # (cm^-2 pixel^-2 s^-1)')
             ax.set_xlabel('radius (kpc)')
 #            ymin,ymax=plt.ylim()
  #           ax.vlines(r200,ymin,ymax)
@@ -248,9 +258,12 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
             plt.loglog(r_model/r200,k_fit/k_norm,'r',alpha=0.3)
         if mode == "4":
             c_factor_array=np.power(1+r_model/r200,cp_p)*np.exp(r_model/r200*(cp_e))+0+cp_g0*np.exp(-(r_model/r200-cp_x0)*(r_model/r200-cp_x0)/cp_sigma)
-            if c_factor_array.min()<1:
+            if c_factor_array.min()<0.95:
                 print(name)
-                continue
+                for ii in range(len(c_factor_array)):
+                    if c_factor_array[ii]<=1:
+                        c_factor_array[ii]=1
+#                continue
             c_factor_array=np.sqrt(c_factor_array)
             if t_ave <= 4:
                 color='b'
@@ -282,7 +295,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
         plt.savefig('entropy_totalvsgravity.pdf')
     if mode == '4':
         plt.xlim(0,1)
-#        plt.ylim(1,10)
+#        plt.ylim(0.5,3)
         plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
         plt.ylabel(r'$(<\rho^2>/<\rho>^2)^{0.5}$')
         reference_factor=np.sqrt(np.power(1+r_model/r200,-3.7)*np.exp(r_model/r200*(3.7))+2.0*np.exp(-(r_model/r200-0.018)*(r_model/r200-0.018)/0.0002))
@@ -290,7 +303,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
         ax=plt.gca()
 #        ax.set_yticks([1,2,3,4,5,6,7,8,9,10])
 #        ax.set_yticklabels(('1','2','3','4','','6','','','','','10'))
-        ax.set_ylim(1,3)
+        ax.set_ylim(0.5,3)
         plt.plot([0.03,0.13],[2.75,2.75],'b')
         plt.plot([0.03,0.13],[2.50,2.50],'grey')
         plt.text(0.15,2.73,'Reference clumping factor profile from Vazza+13',color='b')
