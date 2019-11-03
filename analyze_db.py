@@ -23,7 +23,8 @@ import pymc
 import json
 import cProfile
 import pstats
-
+from astropy.cosmology import FlatLambdaCDM
+cosmo=FlatLambdaCDM(H0=71,Om0=0.27,Tcmb0=2.725)
 G=6.67e-11 #m^3 kg^-1 s^-2
 mp=1.67e-27  #kg
 kev=1.6e-16 #J
@@ -49,6 +50,7 @@ ta2=numpy.load(script_dir+'lrs_dvr.npy')
 ta3=numpy.load(script_dir+'hrs_ori.npy')
 ta4=numpy.load(script_dir+'hrs_dvr.npy')
 t_total=[ta1,ta2,ta3,ta4]
+
 
 tmp_array=[]
 tmp_array.append(0)
@@ -107,9 +109,10 @@ def calc_T(x,k_fit,m_factor,p):
     nth_gamma=p[10]
     delta=p[11]
     delta2=p[12]
+    c4=p[13]
     p_MMnfw=[rho,rs,delta,delta2]
     eta=nth_a*(1+numpy.exp(-numpy.power(r0/R200M/nth_b,nth_gamma)))
-    Tx=(T0_0+(1-c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor)/(1/eta-c3-c2+c2*k/k_fit)
+    Tx=(T0_0+(1-c4*c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor)/(1/eta-c3-c2+c2*k/k_fit)
     return Tx
 
 def entropy_model(x,a,b,c,k0):
@@ -151,13 +154,19 @@ def calc_mass(r_array,t_array,ne_array,p_eta):
         mass_array.append(mass)
     return mass_array
 def clumping_model(x,n1,n2,n3,n4,n5):
-    return numpy.power(1+x,n1)*numpy.exp(x*n2)+n3*numpy.exp(-(x-n4)*(x-n4)/n5)
+    tmp=numpy.power(1+x,n1)*numpy.exp(x*n2)+n3*numpy.exp(-(x-n4)*(x-n4)/n5)
+    for i in range(len(tmp)):
+        if tmp[i] < 1 :
+            tmp[i]=1
+    return tmp
 
 for i in open('param_zzh_for_py.txt'):
     if re.match(r'^R200\s',i):
         R200_0=float(i.split()[1])
         R200M=R200_0
         r200=R200_0
+    if re.match(r'z\s',i):
+        z=float(i.split()[1])
 r_array=[]
 re_array=[]
 t_array=[]
@@ -166,13 +175,32 @@ rsbp_array=[]
 rsbpe_array=[]
 sbp_array=[]
 sbpe_array=[]
+rcsbp_array=[]
+rcsbpe_array=[]
+csbp_array=[]
+csbpe_array=[]
+flag_tproj_array=[]
+f_sbp_array=[]
+
 name=sys.argv[1][0:-4]
 M2=pymc.database.pickle.load('sampled.pickle')
-aa=30000
-bb=10000
+aa=50000
+bb=30000
 cc=50
-for i in open(sys.argv[1]):
-    r,rer,t,te=i.split()
+for i in open('global.cfg'):
+    if re.match(r'^sbp_data_file',i):
+        sbp_data_file=i.split()[1]
+    if re.match(r'^sbp_eninfo',i):
+        sbp_type=i.split()[3]
+    if re.match(r'^temp_data_file',i):
+        temp_data_file=i.split()[1]
+if sbp_type=='CNT':
+    cfunc_file='cfunc_for_density_fit_cnt.txt'
+elif sbp_type=='ERG':
+    cfunc_file='cfunc_for_density_fit_erg.txt'
+cm_per_pixel=cosmo.kpc_proper_per_arcmin(z).value/60*0.492*kpc*100
+for i in open(temp_data_file):
+    r,rer,t,te,flag_tproj=i.split()
     r=float(r)
     rer=float(rer)
     t=float(t)
@@ -181,44 +209,55 @@ for i in open(sys.argv[1]):
     re_array.append(rer)
     t_array.append(t)
     te_array.append(te)
-for i in open('global.cfg'):
-    if re.match(r'^sbp_cfg',i):
-        sbp_cfg=i.split()[1]
-    if re.match(r'^radius_sbp_file',i):
-        sbp_data_file=i.split()[1]
-for i in open(sbp_cfg):
-    if re.match(r'^cm_per_pixel',i):
-        cm_per_pixel=float(i.split()[1])
+    flag_tproj_array.append(flag_tproj)
 for i in open(sbp_data_file):
-    r,rer,sbp,sbpe=i.split()
+    r,rer,sbp,sbpe,f_sbp=i.split()
     r=float(r)
     rer=float(rer)
     sbp=float(sbp)
     sbpe=float(sbpe)
-    rsbp_array.append(r)
-    rsbpe_array.append(rer)
-    sbp_array.append(sbp)
-    sbpe_array.append(sbpe)
-#M2.write_csv(name+"result.csv")
+    if f_sbp=='c':
+        rcsbp_array.append(r)
+        rcsbpe_array.append(rer)
+        csbp_array.append(sbp)
+        csbpe_array.append(sbpe)
+    else:
+        rsbp_array.append(r)
+        rsbpe_array.append(rer)
+        sbp_array.append(sbp)
+        sbpe_array.append(sbpe)
+    f_sbp_array.append(f_sbp)
 cfunc_ori_array=[]
 r_cfunc_array=[]
 cfunc_use_array=[]
 cfunc_ori_array.append(0)
 r_cfunc_array.append(0)
 cfunc_use_array.append(0)
-for i in open('cfunc_for_density_fit.txt'):
+cfunc_cori_array=[]
+r_cfunc_c_array=[]
+cfunc_cuse_array=[]
+cfunc_cori_array.append(0)
+r_cfunc_c_array.append(0)
+cfunc_cuse_array.append(0)
+for i in open(cfunc_file):
     r_cfunc_array.append(float(i.split()[0]))
     cfunc_ori_array.append(float(i.split()[1]))
+for i in open('cfunc_for_chandra_density_fit_cnt.txt'):
+    r_cfunc_c_array.append(float(i.split()[0]))
+    cfunc_cori_array.append(float(i.split()[1]))
 for i in rne_array:
     if i==0:
         continue
     for j in range(len(r_cfunc_array)):
         if r_cfunc_array[j]>i:
             cfunc_use_array.append(cfunc_ori_array[j])
+            cfunc_cuse_array.append(cfunc_cori_array[j])
             break
 cfunc_use_array=numpy.array(cfunc_use_array)
+cfunc_cuse_array=np.array(cfunc_cuse_array)
 t_array=list(t_array)
 te_array=list(te_array)
+
 n1_f=N1_0
 n2_f=M2.trace('n2')[:]
 rs_f=M2.trace('rs')[:]
@@ -244,31 +283,31 @@ cp_e_f=M2.trace('cp_e')[:]
 cp_g0_f=M2.trace('cp_g0')[:]
 cp_x0_f=M2.trace('cp_x0')[:]
 cp_sigma_f=M2.trace('cp_sigma')[:]
+c4_f=M2.trace('c4')[:]
+#M2.db
+#M2.db.close()
 ne_array=[]
 T_array=[]
-p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f])
+p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f])
 numpy.save('p_all',p_all_f)
 ##############################
 #print result
 
-#tc0_f=(T0_f+(1-n3_f)*N1_0*rho_f*rs_f*rs_f*rs_f*numpy.log((rs_f+1)/rs_f)-\
-#        (a0_f+k0_f)*n2_f*numpy.power(ne0_f,2/3))/(1-n3_f-n2_f)
 SUM_T_array=[]
+SUM_Tproj_array=[]
 SUM_ne_array=[]
-SUM_ne_odearray=[]
-SUM_sbp_odearray=[]
 SUM_sbp_fit=[]
+SUM_csbp_fit=[]
 SUM_k_array=[]
 SUM_kfit_array=[]
 SUM_nfw_fit_array=[]
 SUM_mass_array=[]
 SUM_ne_cl_array=[]
 for i in range(len(ne0_f)):
-#    y0=ne0_f[i]
     print(i)
     p=[n1_f,n2_f[i],rs_f[i],a0_f[i],gamma0_f[i],k0_f[i],n3_f[i],\
             rho_f[i],\
-            nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i]]
+            nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i],c4_f[i]]
 #    print(p)
 #    print(y0)
     K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
@@ -288,18 +327,9 @@ for i in range(len(ne0_f)):
     T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
     SUM_T_array.append(T_array)
     p1=[*p,T_array]
-    y0=np.power(K_ARRAY_FIT[0]/T_array[0],-1.5)
-#    y1=odeint(dndr,y0,rne_array,args=(p1,))
     ne_array=[]
-    ne_odearray=[]
-#    for ii in range(0,len(y1)):
-#        ne_odearray.append(y1[ii][0])
-#    ne_odearray=numpy.array(ne_odearray)
-#    SUM_ne_odearray.append(ne_odearray)
     ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
     SUM_ne_array.append(ne_array)
-#    k_array=T_array*numpy.power(ne_odearray,-2/3)
-#    SUM_k_array.append(k_array)
     mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
     SUM_mass_array.append(mass_array)
     nfw_fitted_array=[]
@@ -307,7 +337,6 @@ for i in range(len(ne0_f)):
         nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]])
         nfw_fitted_array.append(nfw_fitted)
     SUM_nfw_fit_array.append(nfw_fitted_array)
-#NE_ARRAY_FIT=ne_array
     ne_cl_array=clumping_model(rne_array/R200_0,cp_p_f[i],cp_e_f[i],cp_g0_f[i],cp_x0_f[i],cp_sigma_f[i])*ne_array
     for j in range(len(ne_cl_array)):
         if ne_cl_array[j]<ne_array[j]:
@@ -315,19 +344,21 @@ for i in range(len(ne0_f)):
     ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
     SUM_ne_cl_array.append(ne_cl_array)
     ne_array=numpy.insert(ne_array,0,0.0)
-#    ne_odearray=numpy.insert(ne_odearray,0,0.0)
+    T_array=numpy.insert(T_array,0,0.0)
     sbp_fit=[]
-    sbp_odefit=[]
-    tmp_r_use=rne_array
+    t2d_array=[]
+    csbp_fit=[]
     for j in rne_array:
         a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
         a=a+sbp_c_f[i]
-#        b=deproject_model.calc_sb(j,tmp_array,ne_odearray,cfunc_use_array,cm_per_pixel)
-#        b=b+sbp_c_f[i]
+        t2d=deproject_model.calc_projT(j,tmp_array,T_array,ne_array)
         sbp_fit.append(a)
-#        sbp_odefit.append(b)
+        t2d_array.append(t2d)
+        b=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_cuse_array,cm_per_pixel)
+        csbp_fit.append(b)
     SUM_sbp_fit.append(sbp_fit)
-#    SUM_sbp_odearray.append(sbp_odefit)
+    SUM_Tproj_array.append(t2d_array)
+    SUM_csbp_fit.append(csbp_fit)
     k_array_fitted=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     SUM_kfit_array.append(k_array_fitted)
 IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
@@ -340,6 +371,11 @@ T_16_ARRAY=[]
 T_50_ARRAY=[]
 T_84_ARRAY=[]
 T_90_ARRAY=[]
+TPROJ_10_ARRAY=[]
+TPROJ_16_ARRAY=[]
+TPROJ_50_ARRAY=[]
+TPROJ_84_ARRAY=[]
+TPROJ_90_ARRAY=[]
 DEN_10_ARRAY=[]
 DEN_16_ARRAY=[]
 DEN_50_ARRAY=[]
@@ -350,11 +386,6 @@ DEN_CL_16_ARRAY=[]
 DEN_CL_50_ARRAY=[]
 DEN_CL_84_ARRAY=[]
 DEN_CL_90_ARRAY=[]
-SBPODE_10_ARRAY=[]
-SBPODE_16_ARRAY=[]
-SBPODE_50_ARRAY=[]
-SBPODE_84_ARRAY=[]
-SBPODE_90_ARRAY=[]
 K_10_ARRAY=[]
 K_16_ARRAY=[]
 K_50_ARRAY=[]
@@ -380,32 +411,38 @@ SBP_16_ARRAY=[]
 SBP_50_ARRAY=[]
 SBP_84_ARRAY=[]
 SBP_90_ARRAY=[]
+CSBP_10_ARRAY=[]
+CSBP_16_ARRAY=[]
+CSBP_50_ARRAY=[]
+CSBP_84_ARRAY=[]
+CSBP_90_ARRAY=[]
 for i in range(len(rne_array)):
     tmp_t_array=[]
     tmp_k_array=[]
     tmp_den_array=[]
     tmp_den_cl_array=[]
-    tmp_sbpode_array=[]
     tmp_sbp_array=[]
+    tmp_csbp_array=[]
     tmp_kfit_array=[]
     tmp_m_array=[]
     tmp_mfit_array=[]
+    tmp_t2d_array=[]
     for j in range(len(ne0_f)):
         tmp_t_array.append(SUM_T_array[j][i])
-#        tmp_k_array.append(SUM_k_array[j][i])
+        tmp_t2d_array.append(SUM_Tproj_array[j][i])
         tmp_den_array.append(SUM_ne_array[j][i])
         tmp_den_cl_array.append(SUM_ne_cl_array[j][i])
-#        tmp_sbpode_array.append(SUM_sbp_odearray[j][i])
         tmp_sbp_array.append(SUM_sbp_fit[j][i])
+        tmp_csbp_array.append(SUM_csbp_fit[j][i])
         tmp_kfit_array.append(SUM_kfit_array[j][i])
         tmp_m_array.append(SUM_mass_array[j][i])
         tmp_mfit_array.append(SUM_nfw_fit_array[j][i])
     tmp_t_array.sort()
-#    tmp_k_array.sort()
+    tmp_t2d_array.sort()
     tmp_den_array.sort()
     tmp_den_cl_array.sort()
-#    tmp_sbpode_array.sort()
     tmp_sbp_array.sort()
+    tmp_csbp_array.sort()
     tmp_kfit_array.sort()
     tmp_m_array.sort()
     tmp_mfit_array.sort()
@@ -424,16 +461,21 @@ for i in range(len(rne_array)):
     T_50_ARRAY.append(tmp_t_array[IND_50])
     T_84_ARRAY.append(tmp_t_array[IND_84])
     T_90_ARRAY.append(tmp_t_array[IND_90])
+    TPROJ_10_ARRAY.append(tmp_t2d_array[IND_10])
+    TPROJ_16_ARRAY.append(tmp_t2d_array[IND_16])
+    TPROJ_50_ARRAY.append(tmp_t2d_array[IND_50])
+    TPROJ_84_ARRAY.append(tmp_t2d_array[IND_84])
+    TPROJ_90_ARRAY.append(tmp_t2d_array[IND_90])
     SBP_10_ARRAY.append(tmp_sbp_array[IND_10])
     SBP_16_ARRAY.append(tmp_sbp_array[IND_16])
     SBP_50_ARRAY.append(tmp_sbp_array[IND_50])
     SBP_84_ARRAY.append(tmp_sbp_array[IND_84])
     SBP_90_ARRAY.append(tmp_sbp_array[IND_90])
-#    K_10_ARRAY.append(tmp_k_array[IND_10])
-#    K_16_ARRAY.append(tmp_k_array[IND_16])
-#    K_50_ARRAY.append(tmp_k_array[IND_50])
-#    K_84_ARRAY.append(tmp_k_array[IND_84])
-#    K_90_ARRAY.append(tmp_k_array[IND_90])
+    CSBP_10_ARRAY.append(tmp_csbp_array[IND_10])
+    CSBP_16_ARRAY.append(tmp_csbp_array[IND_16])
+    CSBP_50_ARRAY.append(tmp_csbp_array[IND_50])
+    CSBP_84_ARRAY.append(tmp_csbp_array[IND_84])
+    CSBP_90_ARRAY.append(tmp_csbp_array[IND_90])
     KFIT_10_ARRAY.append(tmp_kfit_array[IND_10])
     KFIT_16_ARRAY.append(tmp_kfit_array[IND_16])
     KFIT_50_ARRAY.append(tmp_kfit_array[IND_50])
@@ -449,13 +491,8 @@ for i in range(len(rne_array)):
     DEN_CL_50_ARRAY.append(tmp_den_cl_array[IND_50])
     DEN_CL_84_ARRAY.append(tmp_den_cl_array[IND_84])
     DEN_CL_90_ARRAY.append(tmp_den_cl_array[IND_90])
-#    SBPODE_10_ARRAY.append(tmp_sbpode_array[IND_10])
-#    SBPODE_16_ARRAY.append(tmp_sbpode_array[IND_16])
-#    SBPODE_50_ARRAY.append(tmp_sbpode_array[IND_50])
-#    SBPODE_84_ARRAY.append(tmp_sbpode_array[IND_84])
-#    SBPODE_90_ARRAY.append(tmp_sbpode_array[IND_90])
-NAME=sys.argv[1][:-4]
-tmp=name+'_plt.json'
+NAME=sys.argv[1][:-9]
+tmp='array_plt.json'
 fi=open(tmp,'w')
 radius_model=[]
 for i in rne_array:
@@ -467,8 +504,9 @@ dat={
         "sbp": [sbp_array,sbpe_array],
         "radius_model": radius_model,
         "temperature_model": [T_50_ARRAY,T_16_ARRAY,T_84_ARRAY,T_10_ARRAY,T_90_ARRAY],
+        "projected_temperature": [TPROJ_50_ARRAY,TPROJ_16_ARRAY,TPROJ_84_ARRAY,TPROJ_10_ARRAY,TPROJ_90_ARRAY],
         "sbp_model": [SBP_50_ARRAY,SBP_16_ARRAY,SBP_84_ARRAY,SBP_10_ARRAY,SBP_90_ARRAY],
-#        "sbp_ode": [SBPODE_50_ARRAY,SBPODE_16_ARRAY,SBPODE_84_ARRAY],
+        "csbp_model": [CSBP_50_ARRAY,CSBP_16_ARRAY,CSBP_84_ARRAY],
         "den_model": [DEN_50_ARRAY,DEN_16_ARRAY,DEN_84_ARRAY,DEN_10_ARRAY,DEN_90_ARRAY],
         "den_cl_model": [DEN_CL_50_ARRAY,DEN_CL_16_ARRAY,DEN_CL_84_ARRAY,DEN_CL_10_ARRAY,DEN_CL_90_ARRAY],
         "m_calc": [M_50_ARRAY,M_16_ARRAY,M_84_ARRAY,M_10_ARRAY,M_90_ARRAY],
@@ -481,61 +519,77 @@ fi.close()
 K_50_ARRAY=numpy.array(K_50_ARRAY)
 sbpe_array=numpy.array(sbpe_array)
 sbp_array=numpy.array(sbp_array)
+csbp_array=np.array(csbp_array)
+csbpe_array=np.array(csbpe_array)
 t_array=numpy.array(t_array)
 te_array=numpy.array(te_array)
-sbpe_array=sbp_array*0.001+sbpe_array
-te_array=t_array*0.05+te_array
+sbpe_array=sbp_array*0.05+sbpe_array
+te_array=t_array*0.12+te_array
 
-plt.hold(False)
-plt.loglog(tmp_r_use,SBP_84_ARRAY,color='grey')
-plt.hold(True)
-plt.loglog(tmp_r_use,SBP_50_ARRAY,'b')
-plt.loglog(tmp_r_use,SBP_16_ARRAY,color='grey')
+plt.clf()
+plt.loglog(rne_array,SBP_84_ARRAY,color='grey')
+plt.loglog(rne_array,SBP_50_ARRAY,'b')
+plt.loglog(rne_array,SBP_16_ARRAY,color='grey')
 plt.fill_between(rne_array,SBP_16_ARRAY,SBP_84_ARRAY,color='grey')
 plt.errorbar(rsbp_array,sbp_array,xerr=rsbpe_array,yerr=sbpe_array,color='k',linestyle='none')
 plt.xlabel(name+'_Radius(kpc)')
 plt.ylabel('SBP(cm^-2 pixel^-2 s^-1)')
-plt.savefig(name+'_sbp.pdf',dpi=100)
+plt.savefig('sbp.pdf',dpi=100)
 
-#plt.hold(False)
-#plt.loglog(tmp_r_use,SBPODE_84_ARRAY,color='grey')
-#plt.hold(True)
-#plt.loglog(tmp_r_use,SBPODE_50_ARRAY,'b')
-#plt.loglog(tmp_r_use,SBPODE_16_ARRAY,color='grey')
-#plt.fill_between(rne_array,SBPODE_16_ARRAY,SBPODE_84_ARRAY,color='grey')
-#plt.errorbar(rsbp_array,sbp_array,xerr=rsbpe_array,yerr=sbpe_array,color='k',linestyle='none')
-#plt.xlabel(name+'_Radius(kpc)')
-#plt.ylabel('SBP(cm^-2 pixel^-2 s^-1)')
-#plt.savefig('sbpode.pdf',dpi=100)
 
-plt.hold(False)
+plt.clf()
+plt.loglog(rne_array,CSBP_84_ARRAY,color='grey')
+plt.loglog(rne_array,CSBP_50_ARRAY,'b')
+plt.loglog(rne_array,CSBP_16_ARRAY,color='grey')
+plt.fill_between(rne_array,CSBP_16_ARRAY,CSBP_84_ARRAY,color='grey')
+plt.errorbar(rcsbp_array,csbp_array,xerr=rcsbpe_array,yerr=csbpe_array,color='k',linestyle='none')
+plt.xlabel(name+'_Radius(kpc)')
+plt.ylabel('SBP(cm^-2 pixel^-2 s^-1)')
+plt.savefig('csbp.pdf',dpi=100)
+plt.clf()
+
 plt.plot(rne_array,T_84_ARRAY,color='grey')
-plt.hold(True)
 plt.plot(rne_array,T_50_ARRAY,'b')
 plt.plot(rne_array,T_16_ARRAY,color='grey')
+plt.plot(rne_array,TPROJ_50_ARRAY,color='yellow')
 plt.fill_between(rne_array,T_16_ARRAY,T_84_ARRAY,color='grey')
-plt.errorbar(r_array,t_array,xerr=re_array,yerr=te_array,color='k',linestyle='none')
+plt.fill_between(rne_array,TPROJ_16_ARRAY,TPROJ_84_ARRAY,color='green',alpha=0.5)
+r1_array=[]
+r2_array=[]
+t2_array=[]
+t1_array=[]
+re1_array=[]
+te1_array=[]
+re2_array=[]
+te2_array=[]
+for i in range(len(r_array)):
+    if flag_tproj_array[i]=='1':
+        r1_array.append(r_array[i])
+        t1_array.append(t_array[i])
+        re1_array.append(re_array[i])
+        te1_array.append(te_array[i])
+    else:
+        r2_array.append(r_array[i])
+        t2_array.append(t_array[i])
+        re2_array.append(re_array[i])
+        te2_array.append(te_array[i])
+
+plt.errorbar(r1_array,t1_array,xerr=re1_array,yerr=te1_array,color='k',linestyle='none')
+plt.errorbar(r2_array,t2_array,xerr=re2_array,yerr=te2_array,color='orange',linestyle='none')
 plt.xlabel(name+'_Radius(kpc)')
 plt.ylabel('Temperature(keV)')
 plt.savefig(name+'_temperature.pdf',dpi=100)
 
 
-plt.hold(False)
-#plt.loglog(rne_array,K_84_ARRAY,color='grey')
-#plt.hold(True)
-#plt.loglog(rne_array,K_50_ARRAY,'b')
-#plt.loglog(rne_array,K_16_ARRAY,color='grey')
-#plt.fill_between(rne_array,K_16_ARRAY,K_84_ARRAY,color='grey')i
-plt.hold(True)
+plt.clf()
 plt.loglog(rne_array,KFIT_50_ARRAY,'g')
 plt.fill_between(rne_array,KFIT_16_ARRAY,KFIT_84_ARRAY,color='green')
 plt.xlabel(name+'_Radius(kpc)')
 plt.ylabel('Entropy(kev cm^2)')
 plt.savefig(name+'_entropy.pdf',dpi=100)
 
-plt.hold(False)
+plt.clf()
 plt.loglog(rne_array,M_50_ARRAY,'b')
-plt.hold(True)
 plt.fill_between(rne_array,M_16_ARRAY,M_84_ARRAY,color='grey')
 plt.fill_between(rne_array,MFIT_16_ARRAY,MFIT_84_ARRAY,color='green')
 plt.xlim(10,3000)
@@ -543,3 +597,4 @@ plt.ylim(1e11,1e16)
 plt.xlabel(name+'_Radius(kpc)')
 plt.ylabel('Mass(Msun))')
 plt.savefig(name+'_mass.pdf',dpi=100)
+

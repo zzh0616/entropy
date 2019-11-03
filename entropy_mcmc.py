@@ -221,6 +221,7 @@ for i in open(sys.argv[3]):
 FLAG_SBPC=0
 FLAG_FIT=0
 FLAG_ITN=0
+FLAG_CLUMP=0
 for i in open(sys.argv[2],'r'):
     if re.match(r'^T0\s',i):
         T0_0=float(i.split()[1])
@@ -346,6 +347,9 @@ for i in open(sys.argv[2],'r'):
         bb=int(i.split()[2])
         cc=int(i.split()[3])
         FLAG_ITN=1
+    elif re.match(r'clumping\s',i):
+        cp_p0,cp_perr,cp_e0,cp_eerr,cp_g00,cp_g0err,cp_xmin,cp_xmax,cp_sigma0,cp_sigmaerr=np.array(i.split()[1:],dtype=float)
+        FLAG_CLUMP=1
 if FLAG_SBPC==0:
     SBP_C0=1e-12
     SBP_CERR=1
@@ -359,7 +363,17 @@ if FLAG_ITN==0:
     aa=30000
     bb=10000
     cc=50
-
+if FLAG_CLUMP==0:
+    cp_p0=-3.7
+    cp_perr=1.0
+    cp_e0=3.7
+    cp_eerr=1.0
+    cp_g00=0.1
+    cp_g0err=3.0
+    cp_xmin=0
+    cp_xmax=0.1
+    cp_sigma0=1e-4
+    cp_sigmaerr=0.033
 cfunc_ori_array=[]
 r_cfunc_array=[]
 cfunc_use_array=[]
@@ -424,11 +438,11 @@ delta2=pymc.TruncatedNormal('delta2',3.0,1/0.09,2,4.5,value=3.0)
 nth_a=pymc.TruncatedNormal('nth_a',NTH_A_0,1/np.square(NTH_A_ERR),0.4,0.5,value=NTH_A_0)
 nth_b=pymc.TruncatedNormal('nth_b',NTH_B_0,1/np.square(NTH_B_ERR),0,np.inf,value=NTH_B_0)
 nth_gamma=pymc.TruncatedNormal('nth_gamma',NTH_GAMMA_0,1/np.square(NTH_GAMMA_ERR),0,np.inf,value=NTH_GAMMA_0)
-cp_p=pymc.TruncatedNormal('cp_p',-3.7,1,-10,10,value=-3.7)
-cp_e=pymc.TruncatedNormal('cp_e',3.7,1,-10,10,value=3.7)
-cp_g0=pymc.TruncatedNormal('cp_g0',0.1,1/3/3,0,10,value=0.1)
-cp_x0=pymc.Uniform('cp_x0',lower=0,upper=0.1,value=0.05)
-cp_sigma=pymc.TruncatedNormal('cp_sigma',1e-4,9e4,1e-5,0.05,value=5e-4)
+cp_p=pymc.TruncatedNormal('cp_p',cp_p0,1/np.square(cp_perr),-10,10,value=cp_p0)
+cp_e=pymc.TruncatedNormal('cp_e',cp_e0,1/np.square(cp_eerr),-10,10,value=cp_e0)
+cp_g0=pymc.TruncatedNormal('cp_g0',cp_g00,1/np.square(cp_g0err),0,10,value=cp_g00)
+cp_x0=pymc.Uniform('cp_x0',lower=cp_xmin,upper=cp_xmax,value=(cp_xmin+cp_xmax)/2)
+cp_sigma=pymc.TruncatedNormal('cp_sigma',cp_sigma0,1/np.square(cp_sigmaerr),1e-5,0.05,value=cp_sigma0)
 c4=pymc.TruncatedNormal('c4',0.8,1/np.square(0.15),0,1,value=0.8)
 
 ##############

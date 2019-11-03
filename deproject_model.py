@@ -14,7 +14,7 @@ cm_per_kpc=3.0857e21
 def calc_v_ring(rout,rin):
     if rin<rout:
         tmp=rout*rout-rin*rin
-        return 4.18879*math.sqrt(tmp*tmp*tmp) #4.18879=4/3*pi
+        return 4.18879*math.pow(tmp,1.5) #4.18879=4/3*pi
     return 0
 
 ## calculate the surface brightness on the given radius,
