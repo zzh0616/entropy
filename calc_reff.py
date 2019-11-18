@@ -23,6 +23,8 @@ import pymc
 import json
 import cProfile
 import pstats
+from astropy.cosmology import FlatLambdaCDM
+cosmo=FlatLambdaCDM(H0=71,Om0=0.27,Tcmb0=2.725)
 
 G=6.67e-11 #m^3 kg^-1 s^-2
 mp=1.67e-27  #kg
@@ -107,9 +109,10 @@ def calc_T(x,k_fit,m_factor,p):
     nth_gamma=p[10]
     delta=p[11]
     delta2=p[12]
+    c4=p[13]
     p_MMnfw=[rho,rs,delta,delta2]
     eta=nth_a*(1+numpy.exp(-numpy.power(r0/R200M/nth_b,nth_gamma)))
-    Tx=(T0_0+(1-c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor)/(1/eta-c3-c2+c2*k/k_fit)
+    Tx=(T0_0+(1-c3*c4)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor)/(1/eta-c3-c2+c2*k/k_fit)
     return Tx
 
 def entropy_model(x,a,b,c,k0):
@@ -158,6 +161,8 @@ for i in open('param_zzh_for_py.txt'):
         R200_0=float(i.split()[1])
         R200M=R200_0
         r200=R200_0
+    if re.match(r'z\s',i):
+        z=float(i.split()[1])
 r_array=[]
 re_array=[]
 t_array=[]
@@ -166,13 +171,32 @@ rsbp_array=[]
 rsbpe_array=[]
 sbp_array=[]
 sbpe_array=[]
-name=sys.argv[1][0:-4]
+rcsbp_array=[]
+rcsbpe_array=[]
+csbp_array=[]
+csbpe_array=[]
+flag_tproj_array=[]
+f_sbp_array=[]
+
+name=sys.argv[1]
 M2=pymc.database.pickle.load('sampled.pickle')
-aa=30000
-bb=10000
+aa=50000
+bb=30000
 cc=50
-for i in open(sys.argv[1]):
-    r,rer,t,te=i.split()
+for i in open('global.cfg'):
+    if re.match(r'^sbp_data_file',i):
+        sbp_data_file=i.split()[1]
+    if re.match(r'^sbp_eninfo',i):
+        sbp_type=i.split()[3]
+    if re.match(r'^temp_data_file',i):
+        temp_data_file=i.split()[1]
+if sbp_type=='CNT':
+    cfunc_file='cfunc_for_density_fit_cnt.txt'
+elif sbp_type=='ERG':
+    cfunc_file='cfunc_for_density_fit_erg.txt'
+cm_per_pixel=cosmo.kpc_proper_per_arcmin(z).value/60*0.492*kpc*100
+for i in open(temp_data_file):
+    r,rer,t,te,flag_tproj=i.split()
     r=float(r)
     rer=float(rer)
     t=float(t)
@@ -181,44 +205,55 @@ for i in open(sys.argv[1]):
     re_array.append(rer)
     t_array.append(t)
     te_array.append(te)
-for i in open('global.cfg'):
-    if re.match(r'^sbp_cfg',i):
-        sbp_cfg=i.split()[1]
-    if re.match(r'^radius_sbp_file',i):
-        sbp_data_file=i.split()[1]
-for i in open(sbp_cfg):
-    if re.match(r'^cm_per_pixel',i):
-        cm_per_pixel=float(i.split()[1])
+    flag_tproj_array.append(flag_tproj)
 for i in open(sbp_data_file):
-    r,rer,sbp,sbpe=i.split()
+    r,rer,sbp,sbpe,f_sbp=i.split()
     r=float(r)
     rer=float(rer)
     sbp=float(sbp)
     sbpe=float(sbpe)
-    rsbp_array.append(r)
-    rsbpe_array.append(rer)
-    sbp_array.append(sbp)
-    sbpe_array.append(sbpe)
-#M2.write_csv(name+"result.csv")
+    if f_sbp=='c':
+        rcsbp_array.append(r)
+        rcsbpe_array.append(rer)
+        csbp_array.append(sbp)
+        csbpe_array.append(sbpe)
+    else:
+        rsbp_array.append(r)
+        rsbpe_array.append(rer)
+        sbp_array.append(sbp)
+        sbpe_array.append(sbpe)
+    f_sbp_array.append(f_sbp)
 cfunc_ori_array=[]
 r_cfunc_array=[]
 cfunc_use_array=[]
 cfunc_ori_array.append(0)
 r_cfunc_array.append(0)
 cfunc_use_array.append(0)
-for i in open('cfunc_for_density_fit.txt'):
+cfunc_cori_array=[]
+r_cfunc_c_array=[]
+cfunc_cuse_array=[]
+cfunc_cori_array.append(0)
+r_cfunc_c_array.append(0)
+cfunc_cuse_array.append(0)
+for i in open(cfunc_file):
     r_cfunc_array.append(float(i.split()[0]))
     cfunc_ori_array.append(float(i.split()[1]))
+for i in open('cfunc_for_chandra_density_fit_cnt.txt'):
+    r_cfunc_c_array.append(float(i.split()[0]))
+    cfunc_cori_array.append(float(i.split()[1]))
 for i in rne_array:
     if i==0:
         continue
     for j in range(len(r_cfunc_array)):
         if r_cfunc_array[j]>i:
             cfunc_use_array.append(cfunc_ori_array[j])
+            cfunc_cuse_array.append(cfunc_cori_array[j])
             break
 cfunc_use_array=numpy.array(cfunc_use_array)
+cfunc_cuse_array=np.array(cfunc_cuse_array)
 t_array=list(t_array)
 te_array=list(te_array)
+
 n1_f=N1_0
 n2_f=M2.trace('n2')[:]
 rs_f=M2.trace('rs')[:]
@@ -244,9 +279,10 @@ cp_e_f=M2.trace('cp_e')[:]
 cp_g0_f=M2.trace('cp_g0')[:]
 cp_x0_f=M2.trace('cp_x0')[:]
 cp_sigma_f=M2.trace('cp_sigma')[:]
+c4_f=M2.trace('c4')[:]
 ne_array=[]
 T_array=[]
-p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f])
+p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f])
 numpy.save('p_all',p_all_f)
 ##############################
 
@@ -260,7 +296,7 @@ SUM_kfit_array=[]
 SUM_nfw_fit_array=[]
 SUM_mass_array=[]
 SUM_ne_cl_array=[]
-p=[n1_f,n2_f.mean(),rs_f.mean(),a0_f.mean(),gamma0_f.mean(),k0_f.mean(),n3_f.mean(),rho_f.mean(),nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean(),delta_f.mean(),delta2_f.mean()]
+p=[n1_f,n2_f.mean(),rs_f.mean(),a0_f.mean(),gamma0_f.mean(),k0_f.mean(),n3_f.mean(),rho_f.mean(),nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean(),delta_f.mean(),delta2_f.mean(),c4_f.mean()]
 K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f.mean(),kmod_b_f.mean(),kmod_c_f.mean(),kmod_k0_f.mean())
 p_nth=[nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean()]
 m_factor=[]
@@ -324,9 +360,10 @@ nbin=0
 reffi_1=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array))
 reffi_2=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array))
 for i in range(len(ne0_f)):
+    print(i)
     p=[n1_f,n2_f[i],rs_f[i],a0_f[i],gamma0_f[i],k0_f[i],n3_f[i],\
             rho_f[i],\
-            nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i]]
+            nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i],c4_f[i]]
     K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     p_nth=[nth_a_f[i],nth_b_f[i],nth_gamma_f[i]]
     m_factor=[]

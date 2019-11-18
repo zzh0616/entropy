@@ -407,15 +407,32 @@ def main():
     plt.legend()
     plt.savefig(name)
     Efeed_tot=0
+    num_tot=0
     for i in range(len(r_array)):
-        if r_array[i]<= 50:
+        if r_array[i]<= r200:
             if i==0:
                 V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
             else:
                 V_this=4/3*pi*(r_array[i]**3-r_array[i-1]**3)*kpc_per_cm**3
             Efeed_tot=Efeed_tot+Efeedback_array[i]*ne_array[i]*V_this*1.93
+            num_tot=num_tot+ne_array[i]*V_this*1.93
     print(Efeed_tot)
     np.save('Efeedback',Efeedback_array)
+    np.save('gasnumber',num_tot)
+    Efeed_scaled_array=[]
+    scaled_array=np.arange(0.001,1.4,0.001)
+    for i in range(len(scaled_array)):
+        for j in range(len(r_array)):
+            if scaled_array[i]*r200<r_array[j]:
+                Efeed=(Efeedback_array[j])
+                Efeed_scaled_array.append(Efeed)
+                break
+            if j==len(r_array)-1:
+                Efeed_scaled_array.append(Efeedback_array[j])
+    Efeed_scaled_array=np.array(Efeed_scaled_array)
+    np.save('Efeed_scaled_array',Efeed_scaled_array)
+
+
 
 def poss(a0,gamma0,k0):
 #   global r_array

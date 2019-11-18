@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#$1 name of temperature data file ($f.txt)
+#$1 name of the cluster
 from scipy.optimize import minimize
 from scipy.optimize import fsolve
 from scipy.integrate import odeint
@@ -182,7 +182,7 @@ csbpe_array=[]
 flag_tproj_array=[]
 f_sbp_array=[]
 
-name=sys.argv[1][0:-4]
+name=sys.argv[1]
 M2=pymc.database.pickle.load('sampled.pickle')
 aa=50000
 bb=30000
@@ -491,7 +491,7 @@ for i in range(len(rne_array)):
     DEN_CL_50_ARRAY.append(tmp_den_cl_array[IND_50])
     DEN_CL_84_ARRAY.append(tmp_den_cl_array[IND_84])
     DEN_CL_90_ARRAY.append(tmp_den_cl_array[IND_90])
-NAME=sys.argv[1][:-9]
+NAME=sys.argv[1]
 tmp='array_plt.json'
 fi=open(tmp,'w')
 radius_model=[]

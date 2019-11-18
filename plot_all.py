@@ -5,8 +5,9 @@
 
 # $1  mode  1:plot temp,sbp,mass fit and entropy profile in local dir.
 #           2:plot entropy profiles for all sources in the list file
-#           3:compare entropy profiles with/without extra heating
+#           3:compare entropy profiles with/without extra heating, now abandoned
 #           4:plot the clumping factor porfiles for all clusters
+#           5:plot 3 sample entropy profiles in one figure with errorbar for all sample cluster
 # $2 in  list of the name of the source
 #
 # in mode 2 this program will try to read extra data to compare the entropy in outer region, which is named as a1795_compare.txt
@@ -22,11 +23,14 @@ import re as the_re
 import os
 import pymc
 mode = sys.argv[1]
-if mode == "1" or mode == "2" or mode =="3" or mode == "4":
+if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
     if mode == "2":
         pylab.figure('k_global')
     if mode == "1":
         pp=PdfPages('all.pdf')
+    if mode == "5":
+        count5=0
+        tmp_name=1
     for name in open(sys.argv[2]):
         name=name[0:-1]
 #        print(name)
@@ -199,11 +203,12 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
             plt.savefig('pdf/'+name+'.pdf',dpi=10)
             plt.savefig(name+"/"+name+'.pdf')
             pp.savefig(fig)
-        if mode == "2" :
+        if mode == "2" or mode == "5":
             r_entropy=r_model/r_norm
             k_entropy=k_fit/k_norm
             k_entropy_up=k_fit_up/k_norm
             k_entropy_down=k_fit_down/k_norm
+        if mode == "2":
             pylab.figure('k_local')
             plt.clf()
             plt.loglog(r_entropy,k_entropy)
@@ -250,6 +255,23 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4":
             else:
                 color='r'
             plt.loglog(r_entropy, k_entropy,'c',linewidth=0.5)
+        if mode == "5":
+            plt.loglog(r_entropy, k_entropy,label=name)
+            plt.legend()
+            plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='grey')
+            count5=count5+1
+            if count5==5:
+                plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
+                plt.ylabel(r'Entropy (k/${\rm k(0.3r_{500})}$)')
+                std_x=[0.1,1.5]
+                std_y=[0.48*0.95,9.36*0.95]
+                plt.xlim(0.07,1.5)
+                plt.ylim(0.5,9)
+                plt.loglog(std_x,std_y,'k',linewidth=1.2)
+                plt.savefig('pdf/'+str(tmp_name)+'.pdf')
+                plt.clf()
+                tmp_name=tmp_name+1
+                count5=0
         if mode == "3":
             pylab.figure('k_compare_all')
             k_ori=a0*np.power(r_model,gamma0)+k0

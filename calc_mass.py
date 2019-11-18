@@ -112,18 +112,20 @@ def main():
     m200_array=numpy.array(m200_array)
     m500_array=numpy.array(m500_array)
     m3000k_array=numpy.array(m3000k_array)
+    r500_array.sort()
     r200_array.sort()
     r200_c=r200_array[id_mid]
     r200_u=r200_array[id_up]
     r200_d=r200_array[id_down]
-    print(r200_c,r200_d,r200_u)
+    print("r500",r500_array[id_mid],r500_array[id_down],r500_array[id_up])
+    print("r200",r200_c,r200_d,r200_u)
     m200_array.sort()
     m200_c=m200_array[id_mid]
     m200_u=m200_array[id_up]
     m200_d=m200_array[id_down]
     m3000k_array.sort()
-    print(m200_c,m200_d,m200_u)
-    print(m3000k_array[id_mid])
+    print("m200",m200_c,m200_d,m200_u)
+#    print(m3000k_array[id_mid])
     for i in range(len(rne_array)):
         r=rne_array[i]
         if r>=r200_c:
@@ -155,8 +157,9 @@ def main():
         gmas_array.append(gmas)
         gmas_uparray.append(gmas_up)
         gmas_lowarray.append(gmas_low)
-    print(gmas_200,gmas200_low,gmas200_up)
-    print(gmas_array[-1]-gmas_array[-2],rne_array[-1]-rne_array[-2])
+    print("gmas200",gmas_200,gmas200_low,gmas200_up)
+#    print(gmas_array[-1]-gmas_array[-2],rne_array[-1]-rne_array[-2])
+    '''
     SUM_den_tot=np.array(SUM_den_tot)
     SUM_den_tot.sort(0)
     den_tot=SUM_den_tot[id_mid]
@@ -168,14 +171,15 @@ def main():
     plt.xlim(30,2000)
     plt.ylim(1e10,2e14)
     plt.ylabel('Gas Mass ($M_{\odot}$)')
-    plt.savefig('gmas.pdf')
+#    plt.savefig('gmas.pdf')
     plt.clf()
     plt.loglog(rne_array,den_tot,color='b')
     plt.fill_between(rne_array,den_totlow,den_totup,color='grey')
     plt.xlim(30,2000)
     plt.xlabel('Radius (kpc)')
     plt.ylabel('Total Density ($M_{\odot}/kpc^{3}$)')
-    plt.savefig('tden.pdf')
+#    plt.savefig('tden.pdf')
+    '''
     return 0
 
 if __name__=='__main__':
