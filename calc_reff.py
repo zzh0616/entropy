@@ -360,7 +360,7 @@ nbin=0
 reffi_1=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array))
 reffi_2=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array))
 for i in range(len(ne0_f)):
-    print(i)
+#    print(i)
     p=[n1_f,n2_f[i],rs_f[i],a0_f[i],gamma0_f[i],k0_f[i],n3_f[i],\
             rho_f[i],\
             nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i],c4_f[i]]
@@ -433,9 +433,9 @@ for i in range(len(ne0_f)):
 reffi_1=np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.03,np.array(te_array)+np.array(t_array)*0.05),np.array(mass_model)*0.08)
 
 reffi_1=reffi_1*reffi_1*400
-print(reffi_1,reffi_2)
+#print(reffi_1,reffi_2)
 reffi=1-reffi_2/reffi_1
-print(reffi)
+#print(reffi)
 reff=reffi.sum()/(len(t_array)+len(rsbp_array)+len(rmass_array))
 print(reff)
 #NAME=sys.argv[1][:-4]
