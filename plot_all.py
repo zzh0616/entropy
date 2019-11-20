@@ -255,6 +255,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             else:
                 color='r'
             plt.loglog(r_entropy, k_entropy,'c',linewidth=0.5)
+            plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.3,color='grey')
         if mode == "5":
             plt.loglog(r_entropy, k_entropy,label=name)
             plt.legend()

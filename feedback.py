@@ -409,7 +409,7 @@ def main():
     Efeed_tot=0
     num_tot=0
     for i in range(len(r_array)):
-        if r_array[i]<= r200:
+        if r_array[i]<= 0.6*r200:
             if i==0:
                 V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
             else:
@@ -417,6 +417,7 @@ def main():
             Efeed_tot=Efeed_tot+Efeedback_array[i]*ne_array[i]*V_this*1.93
             num_tot=num_tot+ne_array[i]*V_this*1.93
     print(Efeed_tot)
+    Efeedback_array=dq_array_center
     np.save('Efeedback',Efeedback_array)
     np.save('gasnumber',num_tot)
     Efeed_scaled_array=[]
