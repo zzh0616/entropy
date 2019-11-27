@@ -344,6 +344,8 @@ for i in open(sys.argv[2],'r'):
         SBP_CERR=float(i.split()[2])
         SBP_CMIN=float(i.split()[3])
         SBP_CMAX=float(i.split()[4])
+        if SBP_CMAX > sbp_array[-1]:
+            SBP_CMAX=sbp_array[-1]
         FLAG_SBPC=1
     elif re.match(r'fit_factor\s',i):
         T_FACTOR=float(i.split()[1])
@@ -582,18 +584,18 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
                     break
             Mnfw_model=Modefied_Mnfw(rmass_array[i],[rho,rs,delta,delta2])
             M_this=m_array[r_this]
-            M_this_err=M_this*(te_array.sum()/t_array.sum()+0.10)
+            M_this_err=M_this*(te_array.sum()/t_array.sum()+0.15)
             if flag_print==1:
                 print(rmass_array[i],Mnfw_model,M_this,M_this_err,Mnfw_model-M_this)
             if rmass_array[i]<=rsbp_array[-1]:
                 if rmass_array[i]>=50:
                     lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*1*MASS_FACTOR
                 elif rmass_array[i]>=10:
-                    lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.25*MASS_FACTOR
+                    lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.5*MASS_FACTOR
             elif rmass_array[i]>R200_0:
-                lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.25*MASS_FACTOR
-            elif rmass_array[i]>R200_0/1.5:
                 lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.5*MASS_FACTOR
+            elif rmass_array[i]>R200_0/1.5:
+                lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.75*MASS_FACTOR
             else:
                 lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*1.0*MASS_FACTOR
     for i in range(len(r_array)):
@@ -994,7 +996,7 @@ plt.savefig('temperature.pdf',dpi=100)
 
 plt.clf()
 plt.loglog(rne_array,KFIT_50_ARRAY,'g')
-plt.fill_between(rne_array,KFIT_16_ARRAY,KFIT_84_ARRAY,color='green')
+plt.fill_between(rne_array,KFIT_16_ARRAY,KFIT_84_ARRAY,color='green',alpha=0.5)
 plt.xlabel(name+'_Radius(kpc)')
 plt.ylabel('Entropy(kev cm^2)')
 plt.savefig('entropy.pdf',dpi=100)
@@ -1002,7 +1004,7 @@ plt.savefig('entropy.pdf',dpi=100)
 plt.clf()
 plt.loglog(rne_array,M_50_ARRAY,'b')
 plt.fill_between(rne_array,M_16_ARRAY,M_84_ARRAY,color='grey')
-plt.fill_between(rne_array,MFIT_16_ARRAY,MFIT_84_ARRAY,color='green')
+plt.fill_between(rne_array,MFIT_16_ARRAY,MFIT_84_ARRAY,color='green',alpha=0.5)
 plt.xlim(10,3000)
 plt.ylim(1e11,1e16)
 plt.xlabel(name+'_Radius(kpc)')
