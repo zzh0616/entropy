@@ -68,7 +68,7 @@ def mod_nfw(r,p):
     rs=p[1]
     delta=p[2]
     delta2=p[3]
-    den=rho/(np.power(r/rs,delta)*(numpy.power(1+r/rs,delta2-delta)))*4*pi*r*r
+    den=rho/(np.power(r/rs,delta)*(numpy.power(1+r/rs,delta2-delta)))*4*pi*r*r #Msun/kpc^3
     return den
 
 def Modefied_Mnfw(r,p):
@@ -91,7 +91,8 @@ def calc_den(r,p_den,p_mnfw):
     fg=p_den[1]
     s=p_den[2]
     rtmp=s/rs*np.power(r*rs/s,tau)
-    den=tau*fg*np.power(r*rs/s,3*tau-3)*mod_nfw(rtmp,p_mnfw)
+    tmp_const=Msun/kpc/kpc/kpc/1000000/(0.61*mp)
+    den=tau*fg*np.power(r*rs/s,3*tau-3)*mod_nfw(rtmp,p_mnfw)*tmp_const #cm^-3
     return den
 
 ### length of x(radius) and k_fit(entropy) must be the same
