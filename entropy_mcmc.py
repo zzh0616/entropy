@@ -230,6 +230,10 @@ FLAG_SBPC=0
 FLAG_FIT=0
 FLAG_ITN=0
 FLAG_CLUMP=0
+C4_0=0.8
+C4_ERR=0.2
+C4_MIN=0.5
+C4_MAX=1
 for i in open(sys.argv[2],'r'):
     if re.match(r'^T0\s',i):
         T0_0=float(i.split()[1])
@@ -372,6 +376,11 @@ for i in open(sys.argv[2],'r'):
         S_ERR=float(i.split()[2])
         S_MIN=float(i.split()[3])
         S_MAX=float(i.split()[4])
+    elif re.match(r'^c4\s',i):
+        C4_0=float(i.split()[1])
+        C4_ERR=float(i.split()[2])
+        C4_MIN=float(i.split()[3])
+        C4_MAX=float(i.split()[4])
     elif re.match(r'clumping\s',i):
         cp_p0,cp_perr,cp_e0,cp_eerr,cp_g00,cp_g0err,cp_xmin,cp_xmax,cp_sigma0,cp_sigmaerr=np.array(i.split()[1:],dtype=float)
         FLAG_CLUMP=1
@@ -468,7 +477,7 @@ cp_e=pymc.TruncatedNormal('cp_e',cp_e0,1/np.square(cp_eerr),-10,10,value=cp_e0)
 cp_g0=pymc.TruncatedNormal('cp_g0',cp_g00,1/np.square(cp_g0err),0,10,value=cp_g00)
 cp_x0=pymc.Uniform('cp_x0',lower=cp_xmin,upper=cp_xmax,value=(cp_xmin+cp_xmax)/2)
 cp_sigma=pymc.TruncatedNormal('cp_sigma',cp_sigma0,1/np.square(cp_sigmaerr),1e-5,0.05,value=cp_sigma0)
-c4=pymc.TruncatedNormal('c4',0.8,1/np.square(0.15),0,1,value=0.8)
+c4=pymc.TruncatedNormal('c4',C4_0,1/np.square(C4_ERR),C4_MIN,C4_MAX,value=C4_0)
 tau=pymc.TruncatedNormal('tau',TAU_0,1/np.square(TAU_ERR),TAU_MIN,TAU_MAX,value=TAU_0)
 s=pymc.TruncatedNormal('s',S_0,1/np.square(S_ERR),S_MIN,S_MAX,value=S_0)
 fg=pymc.TruncatedNormal('fg',FG_0,1/np.square(FG_ERR),FG_MIN,FG_MAX,value=FG_0)
