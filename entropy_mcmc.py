@@ -85,9 +85,17 @@ def nfw_divbyr(r,p):
     a=nfw(r,p)/r
     return a
 
+def calc_den(r,p_den,p_mnfw):
+    rs=p_mnfw[1]
+    tau=p_den[0]
+    fg=p_den[1]
+    s=p_den[2]
+    rtmp=s/rs*np.power(r*rs/s,tau)
+    den=tau*fg*np.power(r*rs/s,3*tau-3)*mod_nfw(rtmp,p_mnfw)
+    return den
 
 ### length of x(radius) and k_fit(entropy) must be the same
-def calc_T(x,k_fit,m_factor,p):
+def calc_T(x,den_fit,m_factor,p):
     r0=x
     G=6.67e-11 #m^3 kg^-1 s^-2
     mp=1.67e-27  #kg
@@ -116,12 +124,11 @@ def calc_T(x,k_fit,m_factor,p):
     p_MMnfw=[rho,rs,delta,delta2]
     z=Z_0
     eta=nth_a*(1+numpy.exp(-numpy.power(r0/R200M/nth_b,nth_gamma)))
-    Tx=(T0_0+(1-c4*c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor)/(1/eta-c3-c2+c2*k/k_fit)
+    Tx=(T0_0+(1-c4*c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor-k*c2*np.power(den_fit,2/3))/(1/eta-c3-c2)
     return Tx
 
-def entropy_model(x,a,b,c,k0):
-    x=numpy.array(x)
-    return a*numpy.power(x,b)*numpy.exp(c*(-x/R200_0))+k0
+def entropy_model(T_array,ne_array):
+    return T_array*np.power(ne_array,-2/3)
 def calc_mass(r_array,t_array,ne_array,p_eta):
     mass_array=[]
     a=p_eta[0]
@@ -347,6 +354,21 @@ for i in open(sys.argv[2],'r'):
         bb=int(i.split()[2])
         cc=int(i.split()[3])
         FLAG_ITN=1
+    elif re.match(r'^tau\s',i):
+        TAU_0=float(i.split()[1])
+        TAU_ERR=float(i.split()[2])
+        TAU_MIN=float(i.split()[3])
+        TAU_MAX=float(i.split()[4])
+    elif re.match(r'^fg\s',i):
+        FG_0=float(i.split()[1])
+        FG_ERR=float(i.split()[2])
+        FG_MIN=float(i.split()[3])
+        FG_MAX=float(i.split()[4])
+    elif re.match(r'^s\s',i):
+        S_0=float(i.split()[1])
+        S_ERR=float(i.split()[2])
+        S_MIN=float(i.split()[3])
+        S_MAX=float(i.split()[4])
     elif re.match(r'clumping\s',i):
         cp_p0,cp_perr,cp_e0,cp_eerr,cp_g00,cp_g0err,cp_xmin,cp_xmax,cp_sigma0,cp_sigmaerr=np.array(i.split()[1:],dtype=float)
         FLAG_CLUMP=1
@@ -444,6 +466,9 @@ cp_g0=pymc.TruncatedNormal('cp_g0',cp_g00,1/np.square(cp_g0err),0,10,value=cp_g0
 cp_x0=pymc.Uniform('cp_x0',lower=cp_xmin,upper=cp_xmax,value=(cp_xmin+cp_xmax)/2)
 cp_sigma=pymc.TruncatedNormal('cp_sigma',cp_sigma0,1/np.square(cp_sigmaerr),1e-5,0.05,value=cp_sigma0)
 c4=pymc.TruncatedNormal('c4',0.8,1/np.square(0.15),0,1,value=0.8)
+tau=pymc.TruncatedNormal('tau',TAU_0,1/np.square(TAU_ERR),TAU_MIN,TAU_MAX,value=TAU_0)
+s=pymc.TruncatedNormal('s',S_0,1/np.square(S_ERR),S_MIN,S_MAX,value=S_0)
+fg=pymc.TruncatedNormal('fg',FG_0,1/np.square(FG_ERR),FG_MIN,FG_MAX,value=FG_0)
 
 ##############
 ###MCMC fitting
@@ -456,7 +481,7 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         rho=rho,T0=T0,ne0=ne0,sbp_c=sbp_c,kmod_a=kmod_a,kmod_b=kmod_b,\
         kmod_c=kmod_c,nth_a=nth_a,nth_b=nth_b,nth_gamma=nth_gamma,\
         kmod_k0=kmod_k0,delta2=delta2,cp_p=cp_p,cp_e=cp_e,cp_g0=cp_g0,\
-        cp_x0=cp_x0,cp_sigma=cp_sigma,c4=c4,value=2):
+        cp_x0=cp_x0,cp_sigma=cp_sigma,c4=c4,s=s,tau=tau,fg=fg,value=2):
 # there is a bug in pymc2 that using Slice sampling method will sometimes break the upper or lower limit of that parameter. We check it manually here.
     if a0<=0:
         a0=0.01
@@ -478,32 +503,12 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         return np.nan
     lhood=0
     lhood=lhood+gpob((cp_e+cp_p)/(cp_e-cp_p),-0.01,0.03)
-    if kmod_a-a0<=0:
-        lhood=lhood+gpob((kmod_a-a0)/kmod_a,0,1)
-    kmod_test=entropy_model(1500,kmod_a,kmod_b,kmod_c,kmod_k0)
-    kth_test=a0*1500**gamma0+k0
-    if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
-    kmod_test=entropy_model(2000,kmod_a,kmod_b,kmod_c,kmod_k0)
-    kth_test=a0*2000**gamma0+k0
-    if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
-    kmod_test=entropy_model(2500,kmod_a,kmod_b,kmod_c,kmod_k0)
-    kth_test=a0*2500**gamma0+k0
-    if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.03)
-    kmod_test=entropy_model(1000,kmod_a,kmod_b,kmod_c,kmod_k0)
-    kth_test=a0*1000**gamma0+k0
-    if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
-    kmod_test=entropy_model(500,kmod_a,kmod_b,kmod_c,kmod_k0)
-    kth_test=a0*500**gamma0+k0
-    if kth_test>kmod_test:
-        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
+#    if kmod_a-a0<=0:
+#        lhood=lhood+gpob((kmod_a-a0)/kmod_a,0,1)
     if rho<RHO_0:
         lhood=lhood+gpob(np.log(rho),np.log(RHO_0),1)
     y0=[ne0]
-    p=[N1_0,n2,rs,a0,gamma0,k0,n3,rho,nth_a,nth_b,nth_gamma,delta,delta2,c4]
+    p=[N1_0,n2,rs,a0,gamma0,k0,n3,rho,nth_a,nth_b,nth_gamma,delta,delta2,c4,tau,fg,s]
     flag_print=0
     if scipy.random.random()<0.02:
         flag_print=1
@@ -511,10 +516,12 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         print([kmod_a,kmod_b,kmod_c,kmod_k0])
         print([cp_p,cp_e,cp_g0,cp_x0,cp_sigma])
     T_array=[]
-    K_ARRAY_FIT=entropy_model(rne_array,kmod_a,kmod_b,kmod_c,kmod_k0)
+#    K_ARRAY_FIT=entropy_model(rne_array,kmod_a,kmod_b,kmod_c,kmod_k0)
     m_factor=[]
     p_MMnfw=[rho,rs,delta,delta2]
+    p_den=[tau,fg,s]
     m_factor_tmp=[]
+    den_array_fit=calc_den(rne_array,p_den,p_MMnfw)
     for j in rne_array:
         r=j
         e_ori=4*pi*rho*rs*rs*rs/r*np.log((rs+r)/rs)
@@ -522,8 +529,30 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         m_tmp=e_mod/e_ori
         m_factor_tmp.append(m_tmp)
     m_factor=numpy.array(m_factor_tmp)
-    T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
-    ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
+    ne_array=den_array_fit/1.93
+    T_array=calc_T(rne_array,ne_array,m_factor,p)
+    k_fit_array=T_array*np.power(ne_array,-2/3)
+
+    kmod_test=k_fit_array[312]
+    kth_test=a0*1501**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
+    kmod_test=k_fit_array[412]
+    kth_test=a0*2001**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
+    kmod_test=k_fit_array[512]
+    kth_test=a0*2501**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.03)
+    kmod_test=k_fit_array[212]
+    kth_test=a0*1001**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.2)
+    kmod_test=k_fit_array[112]
+    kth_test=a0*501**gamma0+k0
+    if kth_test>kmod_test:
+        lhood=lhood+gpob((kth_test-kmod_test)/kmod_test,0,0.1)
     p_nth=[nth_a,nth_b,nth_gamma]
     m_array=calc_mass(rne_array,T_array,ne_array,p_nth)
     for i in range(len(m_array)):
@@ -608,7 +637,7 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         else:
             lhood=lhood+gpob(sbp_this,tmp_sbp,tmp_sbpe)*0.5*SBP_FACTOR
     return lhood
-M2=pymc.MCMC(set([T0,n2,rs,a0,gamma0,k0,n3,rho,ne0,sbp_c,temp_ne2,nth_a,nth_b,nth_gamma,kmod_a,kmod_b,kmod_c,kmod_k0,delta,delta2,cp_p,cp_e,cp_g0,cp_x0,cp_sigma,c4]),db='pickle',dbname='sampled.pickle')
+M2=pymc.MCMC(set([T0,n2,rs,a0,gamma0,k0,n3,rho,ne0,sbp_c,temp_ne2,nth_a,nth_b,nth_gamma,kmod_a,kmod_b,kmod_c,kmod_k0,delta,delta2,cp_p,cp_e,cp_g0,cp_x0,cp_sigma,c4,tau,fg,s]),db='pickle',dbname='sampled.pickle')
 M2.db
 #M2.use_step_method(pymc.Slicer,gamma0,w=0.1,doubling=True)
 #M2.use_step_method(pymc.Slicer,rs,w=10,doubling=True)
@@ -664,10 +693,13 @@ cp_g0_f=M2.trace('cp_g0')[:]
 cp_x0_f=M2.trace('cp_x0')[:]
 cp_sigma_f=M2.trace('cp_sigma')[:]
 c4_f=M2.trace('c4')[:]
+tau_f=M2.trace('tau')[:]
+s_f=M2.trace('s')[:]
+fg_f=M2.trace('fg')[:]
 M2.db.close()
 ne_array=[]
 T_array=[]
-p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f])
+p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f,tau_f,fg_f,s_f])
 numpy.save('p_all',p_all_f)
 ##############################
 #print result
@@ -684,16 +716,14 @@ SUM_mass_array=[]
 SUM_ne_cl_array=[]
 for i in range(len(ne0_f)):
     print(i)
-    p=[n1_f,n2_f[i],rs_f[i],a0_f[i],gamma0_f[i],k0_f[i],n3_f[i],\
-            rho_f[i],\
-            nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i],c4_f[i]]
-#    print(p)
-#    print(y0)
-    K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
+    p=[n1_f,n2_f[i],rs_f[i],a0_f[i],gamma0_f[i],k0_f[i],n3_f[i],rho_f[i],\
+            nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i],c4_f[i],tau_f[i],fg_f[i],s_f[i]]
+#    K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     p_nth=[nth_a_f[i],nth_b_f[i],nth_gamma_f[i]]
 #    m_factor=1
     m_factor=[]
     p_MMnfw=[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]]
+    p_den=[tau_f[i],fg_f[i],s_f[i]]
     for j in range(len(rne_array)):
         r=rne_array[j]
 #        e_ori=quad(nfw,0,r,p_MMnfw)[0]/r+quad(nfw_divbyr,r,numpy.inf,p_MMnfw)[0]
@@ -703,11 +733,11 @@ for i in range(len(ne0_f)):
         m_tmp=e_mod/e_ori
         m_factor.append(m_tmp)
     m_factor=numpy.array(m_factor)
-    T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
+    gden_array=calc_den(rne_array,p_den,p_MMnfw)
+    ne_array=gden_array/1.93
+    T_array=calc_T(rne_array,ne_array,m_factor,p)
     SUM_T_array.append(T_array)
-    p1=[*p,T_array]
-    ne_array=[]
-    ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
+#    ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
     SUM_ne_array.append(ne_array)
     mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
     SUM_mass_array.append(mass_array)
@@ -738,7 +768,8 @@ for i in range(len(ne0_f)):
     SUM_sbp_fit.append(sbp_fit)
     SUM_Tproj_array.append(t2d_array)
     SUM_csbp_fit.append(csbp_fit)
-    k_array_fitted=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
+    k_array_fitted=T_array*np.power(ne_array,-2/3)
+#    k_array_fitted=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     SUM_kfit_array.append(k_array_fitted)
 IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
 IND_16=numpy.int(numpy.round((aa-bb)/cc*0.16))

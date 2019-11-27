@@ -10,7 +10,7 @@
 # $1-$5 parameters are required
 # 
 ######################
-SCRIP_DIR=`echo $0 | awk -F"/all_clump.sh" '{print $1}'`
+SCRIP_DIR=`echo $0 | awk -F"/all_plain.sh" '{print $1}'`
 COSMO_DIR="${SCRIP_DIR}/../mass_profile_all/mass_profile"
 if [ "$5" = "old"  ]; then
     TEMP_DATA_FILE=$1
