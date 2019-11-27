@@ -90,9 +90,9 @@ def calc_den(r,p_den,p_mnfw):
     tau=p_den[0]
     fg=p_den[1]
     s=p_den[2]
-    rtmp=s/rs*np.power(r*rs/s,tau)
+    rtmp=s*np.power(r/s,tau)
     tmp_const=Msun/kpc/kpc/kpc/1000000/(0.61*mp)
-    den=tau*fg*np.power(r*rs/s,3*tau-3)*mod_nfw(rtmp,p_mnfw)/4/pi/rtmp/rtmp*tmp_const #cm^-3
+    den=tau*fg*np.power(r/s,3*tau-3)*mod_nfw(rtmp,p_mnfw)/4/pi/rtmp/rtmp*tmp_const #cm^-3
     return den
 
 ### length of x(radius) and k_fit(entropy) must be the same
