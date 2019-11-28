@@ -10,7 +10,7 @@
 # $1-$5 parameters are required
 # 
 ######################
-SCRIP_DIR=`echo $0 | awk -F"/all_clump.sh" '{print $1}'`
+SCRIP_DIR=`echo $0 | awk -F"/all_hydro.sh" '{print $1}'`
 COSMO_DIR="${SCRIP_DIR}/../mass_profile_all/mass_profile"
 if [ "$5" = "old"  ]; then
     TEMP_DATA_FILE=$1
@@ -97,10 +97,9 @@ cp $2 param_entropy.txt
 NEC_0=0.05
 #NEC_0=`cat param_sbp.txt | awk '{print $1+$4+$7}' `
 echo "nec ${NEC_0} 0.05" >> param_entropy.txt
-echo "nth_A 0.452 0.1" >>param_entropy.txt
+echo "nth_A 0.49999 0.00001" >>param_entropy.txt
 echo "nth_B 1.401 0.7" >>param_entropy.txt
-echo "nth_gamma 1.628 0.8" >>param_entropy.txt
-echo "clumping -3.7 1.0 3.7 1.0 0.1 3.0 0 0.1 1e-4 0.033" >>param_entropy.txt
+echo "nth_gamma 0.00001 0.00001" >>param_entropy.txt
 echo "s 3000 6000 2000 10000" >>param_entropy.txt
 echo "tau 1.3 1.0 1 4" >>param_entropy.txt
 echo "fg 0.13 0.03 0.01 0.25" >>param_entropy.txt

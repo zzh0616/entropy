@@ -230,9 +230,9 @@ FLAG_SBPC=0
 FLAG_FIT=0
 FLAG_ITN=0
 FLAG_CLUMP=0
-C4_0=0.8
-C4_ERR=0.2
-C4_MIN=0.5
+C4_0=0.5
+C4_ERR=2.0
+C4_MIN=0.0
 C4_MAX=1
 for i in open(sys.argv[2],'r'):
     if re.match(r'^T0\s',i):
