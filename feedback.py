@@ -330,12 +330,8 @@ def main():
         a0=p[2][i]
         k0=p[4][i]
         gamma0=p[3][i]
-        kmod_a=p[15][i]
-        kmod_b=p[16][i]
-        kmod_c=p[17][i]
-        kmod_k0=p[18][i]
         n2=p[0][i]
-        kobs=kmod_a*np.power(r_array,kmod_b)*np.exp(-kmod_c*r_array/r200)+kmod_k0
+        kobs=T_array*np.power(ne_array,-2/3)
         kth=a0*np.power(r_array,gamma0)+k0
         dq_array=n2*T_array*(kobs-kth)/kobs
         sum_dq_array.append(dq_array)

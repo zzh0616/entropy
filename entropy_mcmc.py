@@ -123,7 +123,6 @@ def calc_T(x,den_fit,m_factor,p):
     delta2=p[12]
     c4=p[13]
     p_MMnfw=[rho,rs,delta,delta2]
-    z=Z_0
     eta=nth_a*(1+numpy.exp(-numpy.power(r0/R200M/nth_b,nth_gamma)))
     Tx=(T0_0+(1-c4*c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor-k*c2*np.power(den_fit,2/3))/(1/eta-c3-c2)
     return Tx

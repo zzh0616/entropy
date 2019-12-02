@@ -7,7 +7,7 @@ p=np.load('p_all.npy')
 array_total=[]
 name=sys.argv[1]
 
-fi=open(name+'_result.csv','w')
+fi=open(name+'_result_from_p_all.csv','w')
 
 print('n2,',str(p[0].mean())+',',p[0].std(),file=fi)
 print('rs,',str(p[1].mean())+',',p[1].std(),file=fi)
