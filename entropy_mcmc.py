@@ -599,7 +599,7 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
                 if rmass_array[i]>=50:
                     lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*1*MASS_FACTOR
                 elif rmass_array[i]>=10:
-                    lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.5*MASS_FACTOR
+                    lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.75*MASS_FACTOR
             elif rmass_array[i]>R200_0:
                 lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.5*MASS_FACTOR
             elif rmass_array[i]>R200_0/1.5:
