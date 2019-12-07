@@ -141,7 +141,7 @@ def clumping_model(x,n1,n2,n3,n4,n5):
             tmp[i]=1
     return tmp
 
-def main(script_dir,name,flag_out=False,out_array='k'):
+def main(script_dir,name,flag_out=False,out_array='k',flag_print=True):
     T0_0=0
     tmp1=list(range(1,11))
     tmp2=list(range(11,41,3))
@@ -314,7 +314,8 @@ def main(script_dir,name,flag_out=False,out_array='k'):
     SUM_mass_array=[]
     SUM_ne_cl_array=[]
     for i in range(len(ne0_f)):
-        print(i)
+        if flag_print==True:
+            print(i)
         p=[n1_f,n2_f[i],rs_f[i],a0_f[i],gamma0_f[i],k0_f[i],n3_f[i],rho_f[i],\
                 nth_a_f[i],nth_b_f[i],nth_gamma_f[i],delta_f[i],delta2_f[i],c4_f[i],tau_f[i],fg_f[i],s_f[i]]
         p_nth=[nth_a_f[i],nth_b_f[i],nth_gamma_f[i]]
@@ -619,4 +620,4 @@ def main(script_dir,name,flag_out=False,out_array='k'):
 if __name__=="__main__":
     tmp=sys.argv[0].split('/')
     name=sys.argv[1]
-    main(tmp,name)
+    main(tmp,name,False,ktd,True)

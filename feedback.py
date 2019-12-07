@@ -363,7 +363,7 @@ def main():
 #    ne_array=np.array(dat['den_model'][0],dtype=float)
 #    ne_cl_array_up=np.array(dat['den_cl_model'][2],dtype=float)
 #    ne_cl_array_down=np.array(dat['den_cl_model'][1],dtype=float)
-    SUM_array=analyze_db.main(path,name,True,'ktdc')
+    SUM_array=analyze_db.main(path,name,True,'ktdcmn',False)
     sum_k_array=np.array(SUM_array[0])
     sum_T_array=np.array(SUM_array[1])
     sum_ne_array=np.array(SUM_array[2])
@@ -427,6 +427,7 @@ def main():
     feedback_array_down=sum_feedback_array[ind_16]
     np.save('Efeedback',feedback_array_center)
     np.save('gasnumber',num_tot)
+    plt.clf()
 #    plt.plot(r_array,dq_array_center,label='extra energy change')
 #    plt.fill_between(r_array,dq_array_down,dq_array_up)
 #    plt.plot(r_array,EL_array,'k',label='radiation')
