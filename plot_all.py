@@ -145,7 +145,15 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
                 gamma0=np.float(i.split(',')[1])
             if the_re.match(r'^k0',i):
                 k0=np.float(i.split(',')[1])
-        k_norm=kmod_a*np.power(0.3*r500,kmod_b)*np.exp(kmod_c*-0.3*r500/r200)+kmod_k0
+        knorm_index=0
+        for i in range(len(r_model)):
+            if 0.3*r500<r_model[i]:
+                knorm_index=i
+                break
+            if i==len(r_model)-1:
+                print('something wrong with 0.3r500')
+                knorm_index=0
+        k_norm=k_fit[knorm_index]
         c_factor=np.power(1+0.3,cp_p)*np.exp(0.3*(cp_e))+0+cp_g0*np.exp(-(0.3-cp_x0)*(0.3-cp_x0)/cp_sigma)
 #            k_norm=k_norm*np.power(c_factor,-2/3)
         r_norm=r200
@@ -257,11 +265,21 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             plt.loglog(r_entropy, k_entropy,'c',linewidth=0.5)
             plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.3,color='grey')
         if mode == "5":
-            plt.loglog(r_entropy, k_entropy,label=name)
+            if count5==0:
+                plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='grey')
+                plt.loglog(r_entropy, k_entropy,label=name)
+            if count5==1:
+                plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='green')
+                plt.loglog(r_entropy, k_entropy,label=name)
+            if count5==2:
+                plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='grey')
+                plt.loglog(r_entropy, k_entropy,label=name,color='yellow')
+            if count5==3:
+                plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='green')
+                plt.loglog(r_entropy, k_entropy,label=name,color='red')
             plt.legend()
-            plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='grey')
             count5=count5+1
-            if count5==5:
+            if count5==4:
                 plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
                 plt.ylabel(r'Entropy (k/${\rm k(0.3r_{500})}$)')
                 std_x=[0.1,1.5]
@@ -276,7 +294,6 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         if mode == "3":
             pylab.figure('k_compare_all')
             k_ori=a0*np.power(r_model,gamma0)+k0
-            k_mod=kmod_a*np.power(r_model,kmod_b)*np.exp(-kmod_c*r_model/r200)+kmod_k0
             plt.loglog(r_model/r200,k_ori/k_norm,'b',alpha=0.1)
             plt.loglog(r_model/r200,k_fit/k_norm,'r',alpha=0.3)
         if mode == "4":
@@ -350,7 +367,7 @@ if mode == 'c':
         k_mod_total=[]
         for i in range(len(a0_f)):
             k_ori=a0_f[i]*np.power(r_model,gamma0_f[i])+k0_f[i]
-            k_mod=kmod_a_f[i]*np.power(r_model,kmod_b_f[i])*np.exp(kmod_c_f[i]*-r_model/R200)+kmod_k0_f[i]
+            k_mod=k_fit #temp
             k_ori_total.append(k_ori)
             k_mod_total.append(k_mod)
 

@@ -42,7 +42,7 @@ def mod_nfw(r,p):
     den=rho/(np.power(r/rs,delta)*(numpy.power(1+r/rs,delta2-delta)))*4*pi*r*r
     return den
 
-def Modefied_Mnfw(r,p):
+def Modefied_Mnfw(r,p,t_total):
     M=modnfw_readarray.calc('n',r,p,t_total)
     return M
 
@@ -66,7 +66,7 @@ def calc_den(r,p_den,p_mnfw):
     den=tau*fg*np.power(r/s,3*tau-3)*mod_nfw(rtmp,p_mnfw)/4/pi/rtmp/rtmp*tmp_const #cm^-3
     return den
 
-def calc_T(x,den_fit,m_factor,p):
+def calc_T(x,den_fit,m_factor,p,r200_ref):
     T0_0=0
     r0=x
     G=6.67e-11 #m^3 kg^-1 s^-2
@@ -84,7 +84,6 @@ def calc_T(x,den_fit,m_factor,p):
     k0=p[5]
     c1=p[0]
     k=a0*numpy.power(r0,gamma0)+k0
-    r200=R200_0
     nth_a=p[8]
     nth_b=p[9]
     nth_gamma=p[10]
@@ -92,22 +91,24 @@ def calc_T(x,den_fit,m_factor,p):
     delta2=p[12]
     c4=p[13]
     p_MMnfw=[rho,rs,delta,delta2]
-    eta=nth_a*(1+numpy.exp(-numpy.power(r0/R200M/nth_b,nth_gamma)))
+    r200=r200_ref
+    eta=nth_a*(1+numpy.exp(-numpy.power(r0/r200/nth_b,nth_gamma)))
     Tx=(T0_0+(1-c4*c3)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor-k*c2*np.power(den_fit,2/3))/(1/eta-c3-c2)
     return Tx
 
 def entropy_model(T_array,ne_array):
     return T_array*np.power(ne_array,-2/3)
-def calc_mass(r_array,t_array,ne_array,p_eta):
+def calc_mass(r_array,t_array,ne_array,p_eta,r200_ref):
+    r200=r200_ref
     mass_array=[]
     a=p_eta[0]
     b=p_eta[1]
     c=p_eta[2]
     for i in range(len(r_array)):
         r0=r_array[i]
-        eta=a*(1+numpy.exp(-numpy.power(r0/R200M/b,c)))
-        detadr=a*numpy.exp(-numpy.power(r0/R200M/b,c))*\
-                c*-numpy.power(r0/R200M/b,c-1)/R200M/b
+        eta=a*(1+numpy.exp(-numpy.power(r0/r200/b,c)))
+        detadr=a*numpy.exp(-numpy.power(r0/r200/b,c))*\
+                c*-numpy.power(r0/r200/b,c-1)/r200/b
 #        eta=1
 #        detaer=0
         if i==0:
@@ -140,16 +141,16 @@ def clumping_model(x,n1,n2,n3,n4,n5):
             tmp[i]=1
     return tmp
 
-def main():
+def main(script_dir,name,flag_out=False,out_array='k'):
     T0_0=0
-    script_dir=''
     tmp1=list(range(1,11))
     tmp2=list(range(11,41,3))
     tmp3=list(range(41,3001,5))
     tmp1.extend(tmp2)
     tmp1.extend(tmp3)
     rne_array=numpy.array(tmp1)
-    tmp=sys.argv[0].split('/')
+    tmp=script_dir
+    script_dir=''
     for i in range(len(tmp)-1):
         script_dir=script_dir+tmp[i]
         script_dir=script_dir+'/'
@@ -161,6 +162,13 @@ def main():
     tmp_array=[]
     tmp_array.append(0)
     i_before=0
+    for i in rne_array:
+        if i==rne_array[0]:
+            continue
+        tmp_array.append((i+i_before)/2)
+        if i==rne_array[-1]:
+            tmp_array.append(1.5*i-0.5*i_before)
+        i_before=i
     aa=50000
     bb=30000
     cc=50
@@ -189,7 +197,6 @@ def main():
     csbpe_array=[]
     flag_tproj_array=[]
     f_sbp_array=[]
-    name=sys.argv[1]
     M2=pymc.database.pickle.load('sampled.pickle')
     for i in open('global.cfg'):
         if re.match(r'^sbp_data_file',i):
@@ -313,6 +320,7 @@ def main():
         p_nth=[nth_a_f[i],nth_b_f[i],nth_gamma_f[i]]
         m_factor=[]
         p_MMnfw=[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]]
+        p_den=[tau_f[i],fg_f[i],s_f[i]]
         gden_array=calc_den(rne_array,p_den,p_MMnfw)
         ne_array=gden_array/1.93
         for j in range(len(rne_array)):
@@ -322,14 +330,14 @@ def main():
             m_tmp=e_mod/e_ori
             m_factor.append(m_tmp)
         m_factor=numpy.array(m_factor)
-        T_array=calc_T(rne_array,ne_array,m_factor,p)
+        T_array=calc_T(rne_array,ne_array,m_factor,p,r200)
         SUM_T_array.append(T_array)
         SUM_ne_array.append(ne_array)
-        mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
+        mass_array=calc_mass(rne_array,T_array,ne_array,p_nth,r200)
         SUM_mass_array.append(mass_array)
         nfw_fitted_array=[]
         for j in range(len(rne_array)):
-            nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]])
+            nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]],t_total)
             nfw_fitted_array.append(nfw_fitted)
         SUM_nfw_fit_array.append(nfw_fitted_array)
         ne_cl_array=clumping_model(rne_array/R200_0,cp_p_f[i],cp_e_f[i],cp_g0_f[i],cp_x0_f[i],cp_sigma_f[i])*ne_array
@@ -486,8 +494,8 @@ def main():
         DEN_CL_50_ARRAY.append(tmp_den_cl_array[IND_50])
         DEN_CL_84_ARRAY.append(tmp_den_cl_array[IND_84])
         DEN_CL_90_ARRAY.append(tmp_den_cl_array[IND_90])
-    NAME=sys.argv[1]
-    tmp='array_plt.json'
+    NAME=name
+    tmp=name+'_plt.json'
     fi=open(tmp,'w')
     radius_model=[]
     for i in rne_array:
@@ -529,7 +537,7 @@ def main():
     plt.errorbar(rsbp_array,sbp_array,xerr=rsbpe_array,yerr=sbpe_array,color='k',linestyle='none')
     plt.xlabel(name+'_Radius(kpc)')
     plt.ylabel('SBP(cm^-2 pixel^-2 s^-1)')
-    plt.savefig('sbp.pdf',dpi=100)
+    plt.savefig(name+'_sbp.pdf',dpi=100)
 
 
     plt.clf()
@@ -540,7 +548,7 @@ def main():
     plt.errorbar(rcsbp_array,csbp_array,xerr=rcsbpe_array,yerr=csbpe_array,color='k',linestyle='none')
     plt.xlabel(name+'_Radius(kpc)')
     plt.ylabel('SBP(cm^-2 pixel^-2 s^-1)')
-    plt.savefig('csbp.pdf',dpi=100)
+    plt.savefig(name+'_csbp.pdf',dpi=100)
     plt.clf()
 
     plt.plot(rne_array,T_84_ARRAY,color='grey')
@@ -573,7 +581,7 @@ def main():
     plt.errorbar(r2_array,t2_array,xerr=re2_array,yerr=te2_array,color='orange',linestyle='none')
     plt.xlabel(name+'_Radius(kpc)')
     plt.ylabel('Temperature(keV)')
-    plt.savefig(name+'_temperature.pdf',dpi=100)
+    plt.savefig(name+'_temp.pdf',dpi=100)
 
 
     plt.clf()
@@ -592,7 +600,23 @@ def main():
     plt.xlabel(name+'_Radius(kpc)')
     plt.ylabel('Mass(Msun))')
     plt.savefig(name+'_mass.pdf',dpi=100)
-    return 0
+    sum_out=[]
+    if flag_out == True:
+        if 'k' in out_array:
+            sum_out.append(SUM_kfit_array)
+        if 't' in out_array:
+            sum_out.append(SUM_T_array)
+        if 'd' in out_array:
+            sum_out.append(SUM_ne_array)
+        if 'c' in out_array:
+            sum_out.append(SUM_ne_cl_array)
+        if 'm' in out_array:
+            sum_out.append(SUM_mass_array)
+        if 'n' in out_array:
+            sum_out.append(SUM_nfw_fit_array)
+    return sum_out
 
 if __name__=="__main__":
-    main()
+    tmp=sys.argv[0].split('/')
+    name=sys.argv[1]
+    main(tmp,name)
