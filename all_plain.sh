@@ -103,7 +103,7 @@ echo "nth_gamma 0.0000 0.0001" >>param_entropy.txt
 echo "clumping 0.0 0.0001 0.0 0.0001 0.0 0.0001 0 0.1 1e-4 0.033" >>param_entropy.txt
 echo "s 3000 6000 2000 10000" >>param_entropy.txt
 echo "tau 1.3 1.0 1 4" >>param_entropy.txt
-echo "fg 0.13 0.03 0.01 0.25" >>param_entropy.txt
+echo "fg 0.15 0.03 0.01 0.25" >>param_entropy.txt
 ###end here
 if [ ${FLAG} = "NEW" ]; then
     if [ ${SBP_TYPE} = "CNT" ]; then
