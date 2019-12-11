@@ -68,7 +68,6 @@ def main():
     fi=open(json_file)
     dat=json.load(fi)
     r_array=np.array(dat['radius_model'],dtype=float)
-    m_array=np.array(dat['m_fit'][0],dtype=float)
 #    r200=np.float(dat['r200'])
     r_cfunc_array=[]
     cfunc_ori_array=[]
@@ -114,6 +113,7 @@ def main():
     sum_fg200_array=[]
     sum_k200_array=[]
     sum_Tave_array=[]
+    sum_num_tot=[]
     for i in range(len(p[0])):
         lx_array=[]
         EL_array=[]
