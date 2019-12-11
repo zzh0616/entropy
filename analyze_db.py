@@ -593,7 +593,6 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
     plt.savefig(name+'_mass.pdf',dpi=100)
     sum_out=[]
     del t_total
-    del ta1,ta2,ta3,ta4
     if flag_out == True:
         if 'k' in out_array:
             sum_out.append(SUM_kfit_array)
