@@ -86,7 +86,6 @@ def main():
     cfunc_lx_use_array=np.array(cfunc_lx_use_array)
     param_file="p_all.npy"
     p=np.load(param_file)
-#    ne_cl_array_down=np.array(dat['den_cl_model'][1],dtype=float)
     SUM_array=analyze_db.main(t_total,name,True,'ktdcmn',False)
     sum_k_array=np.array(SUM_array[0])
     sum_T_array=np.array(SUM_array[1])
@@ -214,11 +213,11 @@ def main():
                     flag1=1
             elif flag1==1:
                 if flag2==0:
-                   if r_array[j]<=0.5*r500:
-                       t_tmp=t_tmp+T_array[j]
-                       count=count+1
-                   else:
-                       flag2=1
+                    if r_array[j]<=0.5*r500:
+                        t_tmp=t_tmp+T_array[j]
+                        count=count+1
+                    else:
+                        flag2=1
         Tave=t_tmp/count
         sum_Tave_array.append(Tave)
     out_file=name+'_suminfo.txt'
@@ -242,13 +241,13 @@ def main():
     print('m200:',sum_m200_array[ind_50],sum_m200_array[ind_16],sum_m200_array[ind_84],file=fi)
     print('m500:',sum_m500_array[ind_50],sum_m500_array[ind_16],sum_m500_array[ind_84],file=fi)
     print('lx200:',sum_lx200_array[ind_50],sum_lx200_array[ind_16],sum_lx200_array[ind_84],file=fi)
-    print('lx500:',sum_lx500_array[ind_50],sum_lx500_array[ind_16],sum_xl500_array[ind_84],file=fi)
+    print('lx500:',sum_lx500_array[ind_50],sum_lx500_array[ind_16],sum_lx500_array[ind_84],file=fi)
     print('gm200:',sum_gm200_array[ind_50],sum_gm200_array[ind_16],sum_gm200_array[ind_84],file=fi)
     print('gm500:',sum_gm500_array[ind_50],sum_gm500_array[ind_16],sum_gm500_array[ind_84],file=fi)
     print('fg200:',sum_fg200_array[ind_50],sum_fg200_array[ind_16],sum_fg200_array[ind_84],file=fi)
     print('fg500:',sum_fg500_array[ind_50],sum_fg500_array[ind_16],sum_fg500_array[ind_84],file=fi)
     print('k200:',sum_k200_array[ind_50],sum_k200_array[ind_16],sum_k200_array[ind_84],file=fi)
-    print('Tave(0.2-0.5r500):',sum_Tave_array[ind_50],sum_Tave_array[ind_16],sum_Tave_array[ind_84])
+    print('Tave(0.2-0.5r500):',sum_Tave_array[ind_50],sum_Tave_array[ind_16],sum_Tave_array[ind_84],file=fi)
     print('Efeed(0.2-1r500):',sum_Efeed[ind_50],sum_Efeed[ind_16],sum_Efeed[ind_84],file=fi)
     print('gnum(0.2-1r500):',sum_num_tot[ind_50],sum_num_tot[ind_16],sum_num_tot[ind_84],file=fi)
     fi.close()
@@ -257,7 +256,7 @@ def main():
     sum_EL_array=np.array(sum_EL_array)
     sum_EL_array.sort(0)
     sum_dq_array=np.array(sum_dq_array)
-    sum_dq_array=np.sort(0)
+    sum_dq_array.sort(0)
     dq_array_center=sum_dq_array[ind_50]
     EL_array_center=sum_EL_array[ind_50]
     feedback_array_center=sum_feedback_array[ind_50]
