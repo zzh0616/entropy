@@ -55,10 +55,10 @@ def main():
     for i in range(len(path)-1):
         script_dir=script_dir+path[i]
         script_dir=script_dir+'/'
-    ta1=numpy.load(script_dir+'lrs_ori.npy')
-    ta2=numpy.load(script_dir+'lrs_dvr.npy')
-    ta3=numpy.load(script_dir+'hrs_ori.npy')
-    ta4=numpy.load(script_dir+'hrs_dvr.npy')
+    ta1=np.load(script_dir+'lrs_ori.npy')
+    ta2=np.load(script_dir+'lrs_dvr.npy')
+    ta3=np.load(script_dir+'hrs_ori.npy')
+    ta4=np.load(script_dir+'hrs_dvr.npy')
     for i in open('param_zzh_for_py.txt','r'):
         if re.match(r'z\s',i):
             z=float(i.split()[1])
