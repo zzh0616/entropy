@@ -87,7 +87,7 @@ def main():
     param_file="p_all.npy"
     p=np.load(param_file)
 #    ne_cl_array_down=np.array(dat['den_cl_model'][1],dtype=float)
-    SUM_array=analyze_db.main(path,name,True,'ktdcmn',False)
+    SUM_array=analyze_db.main(t_total,name,True,'ktdcmn',False)
     sum_k_array=np.array(SUM_array[0])
     sum_T_array=np.array(SUM_array[1])
     sum_ne_array=np.array(SUM_array[2])
@@ -193,6 +193,8 @@ def main():
                 if r_array[j]>r200:
                     gmas200=gmas
                     flag_r200=1
+        fg200=gmas200/m200
+        fg500=gmas500/m500
         sum_gm200_array.append(gmas200)
         sum_gm500_array.append(gmas500)
         sum_fg200_array.append(fg200)

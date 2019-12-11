@@ -141,7 +141,7 @@ def clumping_model(x,n1,n2,n3,n4,n5):
             tmp[i]=1
     return tmp
 
-def main(script_dir,name,flag_out=False,out_array='k',flag_print=True):
+def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
     T0_0=0
     tmp1=list(range(1,11))
     tmp2=list(range(11,41,3))
@@ -149,16 +149,6 @@ def main(script_dir,name,flag_out=False,out_array='k',flag_print=True):
     tmp1.extend(tmp2)
     tmp1.extend(tmp3)
     rne_array=numpy.array(tmp1)
-    tmp=script_dir
-    script_dir=''
-    for i in range(len(tmp)-1):
-        script_dir=script_dir+tmp[i]
-        script_dir=script_dir+'/'
-    ta1=numpy.load(script_dir+'lrs_ori.npy')
-    ta2=numpy.load(script_dir+'lrs_dvr.npy')
-    ta3=numpy.load(script_dir+'hrs_ori.npy')
-    ta4=numpy.load(script_dir+'hrs_dvr.npy')
-    t_total=[ta1,ta2,ta3,ta4]
     tmp_array=[]
     tmp_array.append(0)
     i_before=0
@@ -622,4 +612,12 @@ def main(script_dir,name,flag_out=False,out_array='k',flag_print=True):
 if __name__=="__main__":
     tmp=sys.argv[0].split('/')
     name=sys.argv[1]
-    main(tmp,name,False,ktd,True)
+    for i in range(len(tmp)-1):
+        script_dir=script_dir+tmp[i]
+        script_dir=script_dir+'/'
+    ta1=numpy.load(script_dir+'lrs_ori.npy')
+    ta2=numpy.load(script_dir+'lrs_dvr.npy')
+    ta3=numpy.load(script_dir+'hrs_ori.npy')
+    ta4=numpy.load(script_dir+'hrs_dvr.npy')
+    t_total=[ta1,ta2,ta3,ta4]
+    main(t_total,name,False,ktd,True)
