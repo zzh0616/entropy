@@ -44,7 +44,7 @@ def main():
     kev=1.6e-16
     G=6.67e-11
     mu=0.61
-    mp=1.027e-27
+    mp=1.672e-27
     Gyr=365.24*3600*24*1e9 #s
     erg_to_kev=6.24e8
     Msun=1.99e30
@@ -129,7 +129,7 @@ def main():
         T_array=sum_T_array[i]
         dq_array=n2*T_array*(kobs-kth)/kobs
         ne_array=sum_ne_array[i]
-        ne_cl_array=sum_ne_array[i]
+        ne_cl_array=sum_ne_cl_array[i]
         p_mnfw=[p[6][i],p[1][i],p[10][i],p[11][i]]
         r500=critical_radius(500,p_mnfw,z,t_total)
         r200=critical_radius(200,p_mnfw,z,t_total)

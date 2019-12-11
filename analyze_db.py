@@ -41,8 +41,8 @@ def mod_nfw(r,p):
     delta2=p[3]
     den=rho/(np.power(r/rs,delta)*(numpy.power(1+r/rs,delta2-delta)))*4*pi*r*r
     return den
-
-def Modefied_Mnfw(r,p,t_total):
+# cannot input r as an array
+def Modified_Mnfw(r,p,t_total):
     M=modnfw_readarray.calc('n',r,p,t_total)
     return M
 
@@ -328,7 +328,7 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
         SUM_mass_array.append(mass_array)
         nfw_fitted_array=[]
         for j in range(len(rne_array)):
-            nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]],t_total)
+            nfw_fitted=Modified_Mnfw(rne_array[j],[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]],t_total)
             nfw_fitted_array.append(nfw_fitted)
         SUM_nfw_fit_array.append(nfw_fitted_array)
         ne_cl_array=clumping_model(rne_array/R200_0,cp_p_f[i],cp_e_f[i],cp_g0_f[i],cp_x0_f[i],cp_sigma_f[i])*ne_array
@@ -614,9 +614,9 @@ if __name__=="__main__":
     for i in range(len(tmp)-1):
         script_dir=script_dir+tmp[i]
         script_dir=script_dir+'/'
-    ta1=numpy.load(script_dir+'lrs_ori.npy')
-    ta2=numpy.load(script_dir+'lrs_dvr.npy')
-    ta3=numpy.load(script_dir+'hrs_ori.npy')
-    ta4=numpy.load(script_dir+'hrs_dvr.npy')
+    ta1=np.load(script_dir+'lrs_ori.npy')
+    ta2=np.load(script_dir+'lrs_dvr.npy')
+    ta3=np.load(script_dir+'hrs_ori.npy')
+    ta4=np.load(script_dir+'hrs_dvr.npy')
     t_total=[ta1,ta2,ta3,ta4]
-    main(t_total,name,False,ktd,True)
+    main(t_total,name,False,'ktd',True)
