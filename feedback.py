@@ -53,7 +53,7 @@ def main():
     dm=np.float(sys.argv[3])
     script_dir=''
     for i in range(len(path)-1):
-        script_dir=script_dir+tmp[i]
+        script_dir=script_dir+path[i]
         script_dir=script_dir+'/'
     ta1=numpy.load(script_dir+'lrs_ori.npy')
     ta2=numpy.load(script_dir+'lrs_dvr.npy')
