@@ -11,6 +11,7 @@ from modnfw_readarray import mod_nfw,calc
 # calculate the value (in kpc) of the r_delta(delta=200,etc.)
 def critical_radius(od,p_Mnfw,z,t_total):
     Ez=(0.27*np.power(1+z,3)+0.73)**0.5
+    pi=3.1415926
     H0=2.3e-18
     H=H0*Ez
     G=6.673e-8 #cm^3 g^-1 s^-2
@@ -112,6 +113,7 @@ def main():
     sum_fg500_array=[]
     sum_fg200_array=[]
     sum_k200_array=[]
+    sum_Tave_array=[]
     for i in range(len(p[0])):
         lx_array=[]
         EL_array=[]
@@ -199,6 +201,24 @@ def main():
         Ez=(0.27*(1+z)**3+0.73)**0.5
         k200=362*T200*Ez**(-4/3)*(0.27/0.3)**(-4/3)
         sum_k200_array.append(k200)
+        flag1=0
+        flag2=0
+        count=0
+        t_tmp=0
+        for j in range(len(r_array)):
+            T_array=sum_T_array[i]
+            if flag1==0:
+                if r_array[j]>=0.2*r500:
+                    flag1=1
+            elif flag1==1:
+                if flag2==0:
+                   if r_array[j]<=0.5*r500:
+                       t_tmp=t_tmp+T_array[j]
+                       count=count+1
+                   else:
+                       flag2=1
+        Tave=t_tmp/count
+        sum_Tave_array.append(Tave)
     out_file=name+'_suminfo.txt'
     fi=open(out_file,'w')
     sum_Efeed=np.sort(sum_Efeed)
@@ -214,6 +234,7 @@ def main():
     sum_fg200_array=np.sort(sum_fg200_array)
     sum_fg500_array=np.sort(sum_fg500_array)
     sum_k200_array=np.sort(sum_k200_array)
+    sum_Tave_array=np.sort(sum_Tave_array)
     print('r200:',sum_r200_array[ind_50],sum_r200_array[ind_16],sum_r200_array[ind_84],file=fi)
     print('r500:',sum_r500_array[ind_50],sum_r500_array[ind_16],sum_r500_array[ind_84],file=fi)
     print('m200:',sum_m200_array[ind_50],sum_m200_array[ind_16],sum_m200_array[ind_84],file=fi)
@@ -225,6 +246,7 @@ def main():
     print('fg200:',sum_fg200_array[ind_50],sum_fg200_array[ind_16],sum_fg200_array[ind_84],file=fi)
     print('fg500:',sum_fg500_array[ind_50],sum_fg500_array[ind_16],sum_fg500_array[ind_84],file=fi)
     print('k200:',sum_k200_array[ind_50],sum_k200_array[ind_16],sum_k200_array[ind_84],file=fi)
+    print('Tave(0.2-0.5r500):',sum_Tave_array[ind_50],sum_Tave_array[ind_16],sum_Tave_array[ind_84])
     print('Efeed(0.2-1r500):',sum_Efeed[ind_50],sum_Efeed[ind_16],sum_Efeed[ind_84],file=fi)
     print('gnum(0.2-1r500):',sum_num_tot[ind_50],sum_num_tot[ind_16],sum_num_tot[ind_84],file=fi)
     fi.close()
