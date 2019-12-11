@@ -246,7 +246,7 @@ def main():
     plt.plot(r_array,EL_array_center,'k',label='radiation')
     plt.fill_between(r_array,sum_EL_array[ind_16],sum_EL_array[ind_84],color='k',alpha=0.3)
     plt.plot(r_array,feedback_array_center,label='total feedback')
-    plt.fill_between(r_array,feedback_array_down,feedback_array_up),alpha=0.3
+    plt.fill_between(r_array,feedback_array_down,feedback_array_up,alpha=0.3)
     plt.xlabel('radius (kpc)')
     plt.ylabel('energy per particle (kev)')
     feedback_file=name+'_feedback.pdf'
