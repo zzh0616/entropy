@@ -148,11 +148,11 @@ def main():
             E_loss=lx_this*5*Gyr*erg_to_kev/(ne_array[j]*V_this*1.93)
             lx_array.append(lx_this)
             EL_array.append(E_loss)
-            if flag_r500=0:
+            if flag_r500==0:
                 if r_array[i]>r500:
                     lx500=np.array(lx_array).sum()
                     flag_r500=1
-            if flag_r200=0:
+            if flag_r200==0:
                 if r_array[i]>r200:
                     lx200=np.array(lx_array).sum()
                     flag_r200=1
