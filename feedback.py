@@ -39,7 +39,6 @@ def nth_calc(r,a,b,gamma,r200):
 
 def main():
     pi=3.1416
-    Msun=2e30
     kpc=3.086e19
     kpc_per_cm=3.086e21
     kev=1.6e-16
@@ -48,6 +47,7 @@ def main():
     mp=1.027e-27
     Gyr=365.24*3600*24*1e9 #s
     erg_to_kev=6.24e8
+    Msun=1.99e30
     path=sys.argv[0].split('/')
     name=sys.argv[1]
     cfunc_file=sys.argv[2]
@@ -113,6 +113,9 @@ def main():
     sum_k200_array=[]
     sum_Tave_array=[]
     sum_num_tot=[]
+    sum_m3000k_array=[]
+    sum_gm3000k_array=[]
+    sum_fg3000k_array=[]
     for i in range(len(p[0])):
         lx_array=[]
         EL_array=[]
@@ -134,8 +137,10 @@ def main():
         sum_r500_array.append(r500)
         m200=calc('n',r200,p_mnfw,t_total)
         m500=calc('n',r500,p_mnfw,t_total)
+        m3000k=calc('n',3000,p_mnfw,t_total)
         sum_m200_array.append(m200)
         sum_m500_array.append(m500)
+        sum_m3000k_array.append(m3000k)
         flag_r200=0
         flag_r500=0
         lx200=-1
@@ -150,11 +155,11 @@ def main():
             lx_array.append(lx_this)
             EL_array.append(E_loss)
             if flag_r500==0:
-                if r_array[i]>r500:
+                if r_array[j]>r500:
                     lx500=np.array(lx_array).sum()
                     flag_r500=1
             if flag_r200==0:
-                if r_array[i]>r200:
+                if r_array[j]>r200:
                     lx200=np.array(lx_array).sum()
                     flag_r200=1
         Efeedback_array=EL_array+dq_array
@@ -167,7 +172,7 @@ def main():
         num_tot=0
         for j in range(len(r_array)):
             if r_array[j]<= 0.66*r200 and r_array[j]>=0.13*r200:
-                if i==0:
+                if j==0:
                     V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
                 else:
                     V_this=4/3*pi*(r_array[j]**3-r_array[j-1]**3)*kpc_per_cm**3
@@ -183,7 +188,7 @@ def main():
                 V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
             else:
                 V_this=4/3*pi*(r_array[j]**3-r_array[j-1]**3)*kpc_per_cm**3
-            gmas=gmas+ne_array[j]*1.93*0.61*V_this*mp
+            gmas=gmas+ne_array[j]*1.93*0.61*V_this*mp/Msun
             if flag_r500==0:
                 if r_array[j]>r500:
                     gmas500=gmas
@@ -192,8 +197,11 @@ def main():
                 if r_array[j]>r200:
                     gmas200=gmas
                     flag_r200=1
+        sum_gm3000k_array.append(gmas)
         fg200=gmas200/m200
         fg500=gmas500/m500
+        fg3000k=gmas/m3000k
+        sum_fg3000k_array.append(fg3000k)
         sum_gm200_array.append(gmas200)
         sum_gm500_array.append(gmas500)
         sum_fg200_array.append(fg200)
@@ -206,8 +214,8 @@ def main():
         flag2=0
         count=0
         t_tmp=0
+        T_array=sum_T_array[i]
         for j in range(len(r_array)):
-            T_array=sum_T_array[i]
             if flag1==0:
                 if r_array[j]>=0.2*r500:
                     flag1=1
@@ -236,6 +244,9 @@ def main():
     sum_fg500_array=np.sort(sum_fg500_array)
     sum_k200_array=np.sort(sum_k200_array)
     sum_Tave_array=np.sort(sum_Tave_array)
+    sum_m3000k_array=np.sort(sum_m3000k_array)
+    sum_gm3000k_array=np.sort(sum_gm3000k_array)
+    sum_fg3000k_array=np.sort(sum_fg3000k_array)
     print('r200:',sum_r200_array[ind_50],sum_r200_array[ind_16],sum_r200_array[ind_84],file=fi)
     print('r500:',sum_r500_array[ind_50],sum_r500_array[ind_16],sum_r500_array[ind_84],file=fi)
     print('m200:',sum_m200_array[ind_50],sum_m200_array[ind_16],sum_m200_array[ind_84],file=fi)
@@ -250,6 +261,9 @@ def main():
     print('Tave(0.2-0.5r500):',sum_Tave_array[ind_50],sum_Tave_array[ind_16],sum_Tave_array[ind_84],file=fi)
     print('Efeed(0.2-1r500):',sum_Efeed[ind_50],sum_Efeed[ind_16],sum_Efeed[ind_84],file=fi)
     print('gnum(0.2-1r500):',sum_num_tot[ind_50],sum_num_tot[ind_16],sum_num_tot[ind_84],file=fi)
+    print('m3000k:',sum_m3000k_array[ind_50],sum_m3000k_array[ind_16],sum_m3000k_array[ind_84],file=fi)
+    print('gm3000k:',sum_gm3000k_array[ind_50],sum_gm3000k_array[ind_16],sum_gm3000k_array[ind_84],file=fi)
+    print('fg3000k:',sum_fg3000k_array[ind_50],sum_fg3000k_array[ind_16],sum_fg3000k_array[ind_84],file=fi)
     fi.close()
     sum_feedback_array=np.array(sum_feedback_array)
     sum_feedback_array.sort(0)
