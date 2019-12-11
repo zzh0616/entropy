@@ -147,7 +147,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
                 k0=np.float(i.split(',')[1])
         knorm_index=0
         for i in range(len(r_model)):
-            if 0.3*r500<r_model[i]:
+            if 1.0*r500<r_model[i]:
                 knorm_index=i
                 break
             if i==len(r_model)-1:
@@ -157,7 +157,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         c_factor=np.power(1+0.3,cp_p)*np.exp(0.3*(cp_e))+0+cp_g0*np.exp(-(0.3-cp_x0)*(0.3-cp_x0)/cp_sigma)
 #            k_norm=k_norm*np.power(c_factor,-2/3)
         r_norm=r200
-        if mode == '1':
+        if mode == "1":
             matplotlib.rcParams['xtick.direction'] = 'in'
             fig,axarr=plt.subplots(2,2,sharex='col')
             fig.subplots_adjust(hspace=0,wspace=0,left=0.2,right=0.8)
@@ -229,7 +229,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             plt.ylabel('Entropy ($k/k(0.3r_{500})$)')
             plt.xlim(0.01,1.5)
             plt.ylim(0.04,4)
-            plt.plot([0.01,0.3,1],[0.0237,1,4])
+            plt.plot([0.01,0.3,1],[0.0237/3,1/3,4/3])
             k_entropy_uncorr=k_entropy*np.power(ne_cl_array/ne_array,-2/3)
             k_entropy_uncorr_up=k_entropy_up*np.power(ne_cl_array/ne_array,-2/3)
             k_entropy_uncorr_down=k_entropy_down*np.power(ne_cl_array/ne_array,-2/3)
@@ -256,13 +256,16 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
                 plt.text(0.1,2.6,'other\'s result',color='k')
             plt.savefig(name+'/'+name+'_k_scaled.pdf')
             pylab.figure('k_global')
-            if t_ave <= 4:
-                color='b'
-            elif t_ave <=7 :
-                color='g'
-            else:
+            csb_file=name+'/'+name+'_csb.txt'
+            fi=open(csb_file)
+            csb=float(fi.read()[:-1])
+            if csb <= 0.075:
                 color='r'
-            plt.loglog(r_entropy, k_entropy,'c',linewidth=0.5)
+            elif csb >=0.15 :
+                color='c'
+            else:
+                color='g'
+            plt.loglog(r_entropy, k_entropy,color,linewidth=0.5)
             plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.3,color='grey')
         if mode == "5":
             if count5==0:
@@ -315,25 +318,27 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
     if mode == "2":
         pylab.figure('k_global')
         plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
-        plt.ylabel(r'Entropy (k/${\rm k(0.3r_{500})}$)')
+        plt.ylabel(r'Entropy (k/${\rm k(r_{500})}$)')
 #        plt.ylabel('Entropy')
         std_x=[0.1,1.5]
-        std_y=[0.48*0.95,9.36*0.95]
+        std_y=[0.48*0.27,9.36*0.27]
         plt.xlim(0.07,1.5)
-        plt.ylim(0.5,9)
+        plt.ylim(0.1,9)
         plt.loglog(std_x,std_y,'k',linewidth=1.2)
         plt.plot([0.08,0.11],[7,7],'k')
         plt.plot([0.08,0.11],[5,5],'c')
+        plt.plot([0.08,0.11],[3.6,3.6],'r')
         plt.text(0.12,6.85,'Baseline entropy profile from Voit+05',fontsize=8)
-        plt.text(0.12,4.9,'Scaled entropy porfiles of sample clusters',fontsize=8,color='k')
+        plt.text(0.12,4.9,'Scaled entropy porfiles of cool core clusters',fontsize=8,color='k')
+        plt.text(0.12,3.5,'Scaled entropy profiles of none cool core clusters',fontsize=8,color='k')
         plt.savefig('entropy.pdf')
-    if mode == '1':
+    if mode == "1":
         pp.close()
-    if mode == '3':
+    if mode == "3":
         plt.xlabel('Radius ($r/r_{200}$)')
         plt.ylabel('Entropy ($k/k(0.3r_{200})$)')
         plt.savefig('entropy_totalvsgravity.pdf')
-    if mode == '4':
+    if mode == "4":
         plt.xlim(0,1)
 #        plt.ylim(0.5,3)
         plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
