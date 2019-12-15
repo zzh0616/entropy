@@ -130,7 +130,7 @@ def main():
         n2=p[0][i]
         sbp_c=p[9][i]
         kobs=sum_k_array[i]
-        sbp_array=sum_sbp_arary[i]
+        sbp_array=sum_sbp_array[i]
         kobs=np.delete(kobs,0)
         kth=a0*np.power(r_array,gamma0)+k0
         T_array=sum_T_array[i]
