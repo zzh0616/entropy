@@ -7,6 +7,7 @@ import sys
 import re
 from matplotlib import pyplot as plt
 import analyze_db
+import calc_csb
 from modnfw_readarray import mod_nfw,calc
 # calculate the value (in kpc) of the r_delta(delta=200,etc.)
 def critical_radius(od,p_Mnfw,z,t_total):
@@ -86,13 +87,15 @@ def main():
     cfunc_lx_use_array=np.array(cfunc_lx_use_array)
     param_file="p_all.npy"
     p=np.load(param_file)
-    SUM_array=analyze_db.main(t_total,name,True,'ktdcmn',False)
+    SUM_array=analyze_db.main(t_total,name,True,'ktdcmns',False)
+    np.save('sum_array',SUM_array)
     sum_k_array=np.array(SUM_array[0])
     sum_T_array=np.array(SUM_array[1])
     sum_ne_array=np.array(SUM_array[2])
     sum_ne_cl_array=np.array(SUM_array[3])
     sum_mass_array=np.array(SUM_array[4])
     sum_mnfw_array=np.array(SUM_array[5])
+    sum_sbp_array=np.array(SUM_array[6])
     sum_feedback_array=[]
     sum_dq_array=[]
     sum_EL_array=[]
@@ -116,6 +119,8 @@ def main():
     sum_m3000k_array=[]
     sum_gm3000k_array=[]
     sum_fg3000k_array=[]
+    sum_csb_array=[]
+    sum_tcool_array=[]
     for i in range(len(p[0])):
         lx_array=[]
         EL_array=[]
@@ -123,7 +128,9 @@ def main():
         k0=p[4][i]
         gamma0=p[3][i]
         n2=p[0][i]
+        sbp_c=p[9][i]
         kobs=sum_k_array[i]
+        sbp_array=sum_sbp_arary[i]
         kobs=np.delete(kobs,0)
         kth=a0*np.power(r_array,gamma0)+k0
         T_array=sum_T_array[i]
@@ -228,6 +235,9 @@ def main():
                         flag2=1
         Tave=t_tmp/count
         sum_Tave_array.append(Tave)
+        csb,tcool=calc_csb.main(name=name,iput='yes',t_array=T_array,sbp_array=sbp_array,ne_array=ne_array,sbp_c=sbp_c)
+        sum_csb_array.append(csb)
+        sum_tcool_array.append(tcool)
     out_file=name+'_suminfo.txt'
     fi=open(out_file,'w')
     sum_Efeed=np.sort(sum_Efeed)
@@ -247,6 +257,8 @@ def main():
     sum_m3000k_array=np.sort(sum_m3000k_array)
     sum_gm3000k_array=np.sort(sum_gm3000k_array)
     sum_fg3000k_array=np.sort(sum_fg3000k_array)
+    sum_csb_array=np.sort(sum_csb_array)
+    sum_tcool_array=np.sort(sum_tcool_array)
     print('r200:',sum_r200_array[ind_50],sum_r200_array[ind_16],sum_r200_array[ind_84],file=fi)
     print('r500:',sum_r500_array[ind_50],sum_r500_array[ind_16],sum_r500_array[ind_84],file=fi)
     print('m200:',sum_m200_array[ind_50],sum_m200_array[ind_16],sum_m200_array[ind_84],file=fi)
@@ -264,6 +276,8 @@ def main():
     print('m3000k:',sum_m3000k_array[ind_50],sum_m3000k_array[ind_16],sum_m3000k_array[ind_84],file=fi)
     print('gm3000k:',sum_gm3000k_array[ind_50],sum_gm3000k_array[ind_16],sum_gm3000k_array[ind_84],file=fi)
     print('fg3000k:',sum_fg3000k_array[ind_50],sum_fg3000k_array[ind_16],sum_fg3000k_array[ind_84],file=fi)
+    print('tcool:', sum_tcool_array[ind_50],sum_tcool_array[ind_16],sum_tcool_array[ind_84],file=fi)
+    print('csb:',sum_csb_array[ind_50],sum_csb_array[ind_16],sum_csb_array[ind_84])
     fi.close()
     sum_feedback_array=np.array(sum_feedback_array)
     sum_feedback_array.sort(0)
