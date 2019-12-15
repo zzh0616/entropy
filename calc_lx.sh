@@ -9,8 +9,8 @@ DM_CM=`echo ${DL_CM} ${Z} | awk '{print $1/(1+$2)}'`
 ABUND=`cat global.cfg | grep ^abund | awk '{print $2}'`
 NH=`cat global.cfg | grep ^nh | awk '{print $2}'`
 NAME=$1
-#${SCRIP_DIR}/coolfunc_for_lxcalc.sh  T_dump_tmp.dat ${ABUND} ${NH} ${Z} cfunc_for_lxcalc.txt >/dev/null
+${SCRIP_DIR}/coolfunc_for_lxcalc.sh  T_dump_tmp.dat ${ABUND} ${NH} ${Z} cfunc_for_lxcalc.txt
 
-${SCRIP_DIR}/feedback.py ${NAME} cfunc_for_lxcalc.txt ${DM_CM}
+#${SCRIP_DIR}/feedback.py ${NAME} cfunc_for_lxcalc.txt ${DM_CM}
 
 
