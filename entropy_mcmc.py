@@ -435,7 +435,7 @@ for i in rne_array:
     if i==0:
         continue
     for j in range(len(r_cfunc_array)):
-        if r_cfunc_array[j]>i:
+        if r_cfunc_array[j]>=i:
             cfunc_use_array.append(cfunc_ori_array[j])
             cfunc_cuse_array.append(cfunc_cori_array[j])
             break
