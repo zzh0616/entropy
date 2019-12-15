@@ -63,6 +63,7 @@ def main(name='',iput='no',sbp_array=[],t_array=[],ne_array=[],sbp_c=0):
     csb=c1/c2
     if len(rcfunc_array)-len(r_array) != 10 or r_array[10] != rcfunc_array[10]:
         print('warning: please check the cooling function file')
+        print(len(rcfunc_array),len(r_array),r_array[10],rcfunc_array[10])
     etot=0
     erad=0
     for i in range(len(r_array)):

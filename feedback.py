@@ -277,7 +277,7 @@ def main():
     print('gm3000k:',sum_gm3000k_array[ind_50],sum_gm3000k_array[ind_16],sum_gm3000k_array[ind_84],file=fi)
     print('fg3000k:',sum_fg3000k_array[ind_50],sum_fg3000k_array[ind_16],sum_fg3000k_array[ind_84],file=fi)
     print('tcool:', sum_tcool_array[ind_50],sum_tcool_array[ind_16],sum_tcool_array[ind_84],file=fi)
-    print('csb:',sum_csb_array[ind_50],sum_csb_array[ind_16],sum_csb_array[ind_84])
+    print('csb:',sum_csb_array[ind_50],sum_csb_array[ind_16],sum_csb_array[ind_84],file=fi)
     fi.close()
     sum_feedback_array=np.array(sum_feedback_array)
     sum_feedback_array.sort(0)
