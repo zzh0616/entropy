@@ -608,7 +608,7 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
             sum_out.append(SUM_nfw_fit_array)
         if 's' in out_array:
             sum_out.append(SUM_sbp_fit)
-            sum_out.appedd(SUM_csbp_fit)
+            sum_out.append(SUM_csbp_fit)
     return sum_out
 
 if __name__=="__main__":

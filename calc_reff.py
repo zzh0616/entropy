@@ -35,22 +35,21 @@ mu=0.61
 N1_0=1.40733e-10
 pi=3.1415926
 T0_0=0
-script_dir=''
 tmp1=list(range(1,11))
 tmp2=list(range(11,41,3))
 tmp3=list(range(41,3001,5))
 tmp1.extend(tmp2)
 tmp1.extend(tmp3)
 rne_array=numpy.array(tmp1)
-tmp=sys.argv[0].split('/')
-for i in range(len(tmp)-1):
-    script_dir=script_dir+tmp[i]
-    script_dir=script_dir+'/'
-ta1=numpy.load(script_dir+'lrs_ori.npy')
-ta2=numpy.load(script_dir+'lrs_dvr.npy')
-ta3=numpy.load(script_dir+'hrs_ori.npy')
-ta4=numpy.load(script_dir+'hrs_dvr.npy')
-t_total=[ta1,ta2,ta3,ta4]
+#tmp=sys.argv[0].split('/')
+#for i in range(len(tmp)-1):
+#    script_dir=script_dir+tmp[i]
+#    script_dir=script_dir+'/'
+#ta1=numpy.load(script_dir+'lrs_ori.npy')
+#ta2=numpy.load(script_dir+'lrs_dvr.npy')
+#ta3=numpy.load(script_dir+'hrs_ori.npy')
+#ta4=numpy.load(script_dir+'hrs_dvr.npy')
+#t_total=[ta1,ta2,ta3,ta4]
 
 tmp_array=[]
 tmp_array.append(0)
@@ -154,39 +153,39 @@ def main():
 #            break
 #cfunc_use_array=numpy.array(cfunc_use_array)
 #cfunc_cuse_array=np.array(cfunc_cuse_array)
-t_array=list(t_array)
-te_array=list(te_array)
+	t_array=list(t_array)
+	te_array=list(te_array)
 
-n1_f=N1_0
-n2_f=M2.trace('n2')[:]
-rs_f=M2.trace('rs')[:]
-a0_f=M2.trace('a0')[:]
-gamma0_f=M2.trace('gamma0')[:]
-k0_f=M2.trace('k0')[:]
-n3_f=M2.trace('n3')[:]
-rho_f=M2.trace('rho')[:]
-ne0_f=M2.trace('ne0')[:]
-T0_f=M2.trace('T0')[:]
+#n1_f=N1_0
+#n2_f=M2.trace('n2')[:]
+#rs_f=M2.trace('rs')[:]
+#a0_f=M2.trace('a0')[:]
+#gamma0_f=M2.trace('gamma0')[:]
+#k0_f=M2.trace('k0')[:]
+#n3_f=M2.trace('n3')[:]
+#rho_f=M2.trace('rho')[:]
+#ne0_f=M2.trace('ne0')[:]
+#T0_f=M2.trace('T0')[:]
 sbp_c_f=M2.trace('sbp_c')[:]
-delta_f=M2.trace('delta')[:]
-delta2_f=M2.trace('delta2')[:]
-nth_a_f=M2.trace('nth_a')[:]
-nth_b_f=M2.trace('nth_b')[:]
-nth_gamma_f=M2.trace('nth_gamma')[:]
-kmod_a_f=M2.trace('kmod_a')[:]
-kmod_b_f=M2.trace('kmod_b')[:]
-kmod_c_f=M2.trace('kmod_c')[:]
-kmod_k0_f=M2.trace('kmod_k0')[:]
-cp_p_f=M2.trace('cp_p')[:]
-cp_e_f=M2.trace('cp_e')[:]
-cp_g0_f=M2.trace('cp_g0')[:]
-cp_x0_f=M2.trace('cp_x0')[:]
-cp_sigma_f=M2.trace('cp_sigma')[:]
-c4_f=M2.trace('c4')[:]
+#delta_f=M2.trace('delta')[:]
+#delta2_f=M2.trace('delta2')[:]
+#nth_a_f=M2.trace('nth_a')[:]
+#nth_b_f=M2.trace('nth_b')[:]
+#nth_gamma_f=M2.trace('nth_gamma')[:]
+#kmod_a_f=M2.trace('kmod_a')[:]
+#kmod_b_f=M2.trace('kmod_b')[:]
+#kmod_c_f=M2.trace('kmod_c')[:]
+#kmod_k0_f=M2.trace('kmod_k0')[:]
+#cp_p_f=M2.trace('cp_p')[:]
+#cp_e_f=M2.trace('cp_e')[:]
+#cp_g0_f=M2.trace('cp_g0')[:]
+#cp_x0_f=M2.trace('cp_x0')[:]
+#cp_sigma_f=M2.trace('cp_sigma')[:]
+#c4_f=M2.trace('c4')[:]
 ne_array=[]
 T_array=[]
-p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f])
-numpy.save('p_all',p_all_f)
+#p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f])
+#numpy.save('p_all',p_all_f)
 ##############################
 
 #SUM_T_array=[]
@@ -199,11 +198,11 @@ numpy.save('p_all',p_all_f)
 #SUM_nfw_fit_array=[]
 #SUM_mass_array=[]
 #SUM_ne_cl_array=[]
-p=[n1_f,n2_f.mean(),rs_f.mean(),a0_f.mean(),gamma0_f.mean(),k0_f.mean(),n3_f.mean(),rho_f.mean(),nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean(),delta_f.mean(),delta2_f.mean(),c4_f.mean()]
+#p=[n1_f,n2_f.mean(),rs_f.mean(),a0_f.mean(),gamma0_f.mean(),k0_f.mean(),n3_f.mean(),rho_f.mean(),nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean(),delta_f.mean(),delta2_f.mean(),c4_f.mean()]
 #K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f.mean(),kmod_b_f.mean(),kmod_c_f.mean(),kmod_k0_f.mean())
-p_nth=[nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean()]
+#p_nth=[nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean()]
 #m_factor=[]
-p_MMnfw=[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()]
+#p_MMnfw=[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()]
 #for j in range(len(rne_array)):
 #    r=rne_array[j]
 #    e_ori=4*pi*rho_f.mean()*np.power(rs_f.mean(),3)/r*np.log((rs_f.mean()+r)/rs_f.mean())
@@ -219,25 +218,25 @@ p_MMnfw=[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()]
 #    SUM_ne_array.append(ne_array)
 #mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
 #    SUM_mass_array.append(mass_array)
-nfw_fitted_array=[]
-for j in range(len(rne_array)):
-    nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()])
-    nfw_fitted_array.append(nfw_fitted)
+#nfw_fitted_array=[]
+#for j in range(len(rne_array)):
+#    nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()])
+#    nfw_fitted_array.append(nfw_fitted)
 #    SUM_nfw_fit_array.append(nfw_fitted_array)
-ne_cl_array=clumping_model(rne_array/R200_0,cp_p_f.mean(),cp_e_f.mean(),cp_g0_f.mean(),cp_x0_f.mean(),cp_sigma_f.mean())*ne_array
-for j in range(len(ne_cl_array)):
-    if ne_cl_array[j]<ne_array[j]:
-        ne_cl_array[j]=ne_array[j]
-ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
+#ne_cl_array=clumping_model(rne_array/R200_0,cp_p_f.mean(),cp_e_f.mean(),cp_g0_f.mean(),cp_x0_f.mean(),cp_sigma_f.mean())*ne_array
+#for j in range(len(ne_cl_array)):
+#    if ne_cl_array[j]<ne_array[j]:
+#        ne_cl_array[j]=ne_array[j]
+#ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
 #    SUM_ne_cl_array.append(ne_cl_array)
-ne_array=numpy.insert(ne_array,0,0.0)
+#ne_array=numpy.insert(ne_array,0,0.0)
 sbp_fit=[]
 tmp_r_use=rne_array
 sbp_model_array=[]
-for j in range(len(rsbp_array)):
-    a=deproject_model.calc_sb(rsbp_array[j],tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
-    a=a+sbp_c_f.mean()
-    sbp_model_array.append(a)
+#for j in range(len(rsbp_array)):
+#    a=deproject_model.calc_sb(rsbp_array[j],tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
+#    a=a+sbp_c_f.mean()
+#    sbp_model_array.append(a)
 sbp_model_array=np.array(sbp_model_array)
 t_model_array=[]
 for i in range(len(r_array)):
@@ -341,132 +340,3 @@ reffi=1-reffi_2/reffi_1
 #print(reffi)
 reff=reffi.sum()/(len(t_array)+len(rsbp_array)+len(rmass_array))
 print(reff)
-#NAME=sys.argv[1][:-4]
-'''
-
-IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
-IND_16=numpy.int(numpy.round((aa-bb)/cc*0.16))
-IND_50=numpy.int(numpy.round((aa-bb)/cc*0.5))
-IND_84=numpy.int(numpy.round((aa-bb)/cc*0.84))
-IND_90=numpy.int(numpy.round((aa-bb)/cc*0.9))
-T_10_ARRAY=[]
-T_16_ARRAY=[]
-T_50_ARRAY=[]
-T_84_ARRAY=[]
-T_90_ARRAY=[]
-DEN_10_ARRAY=[]
-DEN_16_ARRAY=[]
-DEN_50_ARRAY=[]
-DEN_84_ARRAY=[]
-DEN_90_ARRAY=[]
-DEN_CL_10_ARRAY=[]
-DEN_CL_16_ARRAY=[]
-DEN_CL_50_ARRAY=[]
-DEN_CL_84_ARRAY=[]
-DEN_CL_90_ARRAY=[]
-SBPODE_10_ARRAY=[]
-SBPODE_16_ARRAY=[]
-SBPODE_50_ARRAY=[]
-SBPODE_84_ARRAY=[]
-SBPODE_90_ARRAY=[]
-K_10_ARRAY=[]
-K_16_ARRAY=[]
-K_50_ARRAY=[]
-K_84_ARRAY=[]
-K_90_ARRAY=[]
-KFIT_10_ARRAY=[]
-KFIT_16_ARRAY=[]
-KFIT_50_ARRAY=[]
-KFIT_84_ARRAY=[]
-KFIT_90_ARRAY=[]
-M_10_ARRAY=[]
-M_16_ARRAY=[]
-M_50_ARRAY=[]
-M_84_ARRAY=[]
-M_90_ARRAY=[]
-MFIT_10_ARRAY=[]
-MFIT_16_ARRAY=[]
-MFIT_50_ARRAY=[]
-MFIT_84_ARRAY=[]
-MFIT_90_ARRAY=[]
-SBP_10_ARRAY=[]
-SBP_16_ARRAY=[]
-SBP_50_ARRAY=[]
-SBP_84_ARRAY=[]
-SBP_90_ARRAY=[]
-for i in range(len(rne_array)):
-    tmp_t_array=[]
-    tmp_k_array=[]
-    tmp_den_array=[]
-    tmp_den_cl_array=[]
-    tmp_sbpode_array=[]
-    tmp_sbp_array=[]
-    tmp_kfit_array=[]
-    tmp_m_array=[]
-    tmp_mfit_array=[]
-    for j in range(len(ne0_f)):
-        tmp_t_array.append(SUM_T_array[j][i])
-#        tmp_k_array.append(SUM_k_array[j][i])
-        tmp_den_array.append(SUM_ne_array[j][i])
-        tmp_den_cl_array.append(SUM_ne_cl_array[j][i])
-#        tmp_sbpode_array.append(SUM_sbp_odearray[j][i])
-        tmp_sbp_array.append(SUM_sbp_fit[j][i])
-        tmp_kfit_array.append(SUM_kfit_array[j][i])
-        tmp_m_array.append(SUM_mass_array[j][i])
-        tmp_mfit_array.append(SUM_nfw_fit_array[j][i])
-    tmp_t_array.sort()
-#    tmp_k_array.sort()
-    tmp_den_array.sort()
-    tmp_den_cl_array.sort()
-#    tmp_sbpode_array.sort()
-    tmp_sbp_array.sort()
-    tmp_kfit_array.sort()
-    tmp_m_array.sort()
-    tmp_mfit_array.sort()
-    M_10_ARRAY.append(tmp_m_array[IND_10])
-    M_16_ARRAY.append(tmp_m_array[IND_16])
-    M_50_ARRAY.append(tmp_m_array[IND_50])
-    M_84_ARRAY.append(tmp_m_array[IND_84])
-    M_90_ARRAY.append(tmp_m_array[IND_90])
-    MFIT_10_ARRAY.append(tmp_mfit_array[IND_10])
-    MFIT_16_ARRAY.append(tmp_mfit_array[IND_16])
-    MFIT_50_ARRAY.append(tmp_mfit_array[IND_50])
-    MFIT_84_ARRAY.append(tmp_mfit_array[IND_84])
-    MFIT_90_ARRAY.append(tmp_mfit_array[IND_90])
-    T_10_ARRAY.append(tmp_t_array[IND_10])
-    T_16_ARRAY.append(tmp_t_array[IND_16])
-    T_50_ARRAY.append(tmp_t_array[IND_50])
-    T_84_ARRAY.append(tmp_t_array[IND_84])
-    T_90_ARRAY.append(tmp_t_array[IND_90])
-    SBP_10_ARRAY.append(tmp_sbp_array[IND_10])
-    SBP_16_ARRAY.append(tmp_sbp_array[IND_16])
-    SBP_50_ARRAY.append(tmp_sbp_array[IND_50])
-    SBP_84_ARRAY.append(tmp_sbp_array[IND_84])
-    SBP_90_ARRAY.append(tmp_sbp_array[IND_90])
-#    K_10_ARRAY.append(tmp_k_array[IND_10])
-#    K_16_ARRAY.append(tmp_k_array[IND_16])
-#    K_50_ARRAY.append(tmp_k_array[IND_50])
-#    K_84_ARRAY.append(tmp_k_array[IND_84])
-#    K_90_ARRAY.append(tmp_k_array[IND_90])
-    KFIT_10_ARRAY.append(tmp_kfit_array[IND_10])
-    KFIT_16_ARRAY.append(tmp_kfit_array[IND_16])
-    KFIT_50_ARRAY.append(tmp_kfit_array[IND_50])
-    KFIT_84_ARRAY.append(tmp_kfit_array[IND_84])
-    KFIT_90_ARRAY.append(tmp_kfit_array[IND_90])
-    DEN_10_ARRAY.append(tmp_den_array[IND_10])
-    DEN_16_ARRAY.append(tmp_den_array[IND_16])
-    DEN_50_ARRAY.append(tmp_den_array[IND_50])
-    DEN_84_ARRAY.append(tmp_den_array[IND_84])
-    DEN_90_ARRAY.append(tmp_den_array[IND_90])
-    DEN_CL_10_ARRAY.append(tmp_den_cl_array[IND_10])
-    DEN_CL_16_ARRAY.append(tmp_den_cl_array[IND_16])
-    DEN_CL_50_ARRAY.append(tmp_den_cl_array[IND_50])
-    DEN_CL_84_ARRAY.append(tmp_den_cl_array[IND_84])
-    DEN_CL_90_ARRAY.append(tmp_den_cl_array[IND_90])
-#    SBPODE_10_ARRAY.append(tmp_sbpode_array[IND_10])
-#    SBPODE_16_ARRAY.append(tmp_sbpode_array[IND_16])
-#    SBPODE_50_ARRAY.append(tmp_sbpode_array[IND_50])
-#    SBPODE_84_ARRAY.append(tmp_sbpode_array[IND_84])
-#    SBPODE_90_ARRAY.append(tmp_sbpode_array[IND_90])
-NAME=sys.argv[1][:-4]
-'''
