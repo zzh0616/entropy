@@ -62,195 +62,98 @@ for i in rne_array:
     if i==rne_array[-1]:
         tmp_array.append(1.5*i-0.5*i_before)
     i_before=i
-##p=[rho,rs,delta,delta2]
-def mod_nfw(r,p):
-    rho=p[0]
-    rs=p[1]
-    delta=p[2]
-    delta2=p[3]
-    den=rho/(np.power(r/rs,delta)*(numpy.power(1+r/rs,delta2-delta)))*4*pi*r*r
-    return den
-
-def Modefied_Mnfw(r,p):
-    M=modnfw_readarray.calc('n',r,p,t_total)
-    return M
-
-def mod_nfw_divbyr(r,p):
-    a=mod_nfw(r,p)/r
-    return a
-def nfw(r,p):
-    a=mod_nfw(r,[p[0],p[1],1.0,3.0])
-    return a
-def nfw_divbyr(r,p):
-    a=nfw(r,p)/r
-    return a
-def calc_T(x,k_fit,m_factor,p):
-    T0_0=0
-    r0=x
-    G=6.67e-11 #m^3 kg^-1 s^-2
-    mp=1.67e-27  #kg
-    kev=1.6e-16 #J
-    kpc=3.086e19 #m
-    Msun=2e30 #kg
-    mu=0.61
-    rs=p[2]
-    rho=p[7]
-    c2=p[1]
-    c3=p[6]
-    a0=p[3]
-    gamma0=p[4]
-    k0=p[5]
-    c1=p[0]
-    k=a0*numpy.power(r0,gamma0)+k0
-    dkdr=a0*gamma0*numpy.power(r0,gamma0-1)
-    r200=R200_0
-    nth_a=p[8]
-    nth_b=p[9]
-    nth_gamma=p[10]
-    delta=p[11]
-    delta2=p[12]
-    c4=p[13]
-    p_MMnfw=[rho,rs,delta,delta2]
-    eta=nth_a*(1+numpy.exp(-numpy.power(r0/R200M/nth_b,nth_gamma)))
-    Tx=(T0_0+(1-c3*c4)*c1*rho*rs*rs*rs*numpy.log((rs+x)/rs)/x*m_factor)/(1/eta-c3-c2+c2*k/k_fit)
-    return Tx
-
-def entropy_model(x,a,b,c,k0):
-    x=numpy.array(x)
-    return a*numpy.power(x,b)*numpy.exp(c*(-x/R200_0))+k0
-def calc_mass(r_array,t_array,ne_array,p_eta):
-    mass_array=[]
-    a=p_eta[0]
-    b=p_eta[1]
-    c=p_eta[2]
-    for i in range(len(r_array)):
-        r0=r_array[i]
-        eta=a*(1+numpy.exp(-numpy.power(r0/R200M/b,c)))
-        detadr=a*numpy.exp(-numpy.power(r0/R200M/b,c))*\
-                c*-numpy.power(r0/R200M/b,c-1)/R200M/b
-#        eta=1
-#        detaer=0
-        if i==0:
-            dTdr=(t_array[i+1]-t_array[i])/(r_array[i+1]-r_array[i])
-            dnedr=(ne_array[i+1]-ne_array[i])/(r_array[i+1]-r_array[i])
-            z1=(dnedr*t_array[i]/ne_array[i]+dTdr-t_array[i]/eta*detadr)/eta #kev/kpc
-            mass=-z1/G/mu/mp*r0*r0/Msun*kpc*kev #Msun
-        elif i==len(r_array)-1:
-            dTdr=(t_array[i]-t_array[i-1])/(r_array[i]-r_array[i-1])
-            dnedr=(ne_array[i]-ne_array[i-1])/(r_array[i]-r_array[i-1])
-            z1=(dnedr*t_array[i]/ne_array[i]+dTdr-t_array[i]/eta*detadr)/eta #kev/kpc
-            mass=-z1/G/mu/mp*r0*r0/Msun*kpc*kev #Msun
-        else:
-            dTdr_r=(t_array[i+1]-t_array[i])/(r_array[i+1]-r_array[i])
-            dnedr_r=(ne_array[i+1]-ne_array[i])/(r_array[i+1]-r_array[i])
-            dTdr_l=(t_array[i]-t_array[i-1])/(r_array[i]-r_array[i-1])
-            dnedr_l=(ne_array[i]-ne_array[i-1])/(r_array[i]-r_array[i-1])
-            dTdr=(dTdr_l+dTdr_r)/2
-            dnedr=(dnedr_l+dnedr_r)/2
-            z1=(dnedr*t_array[i]/ne_array[i]+dTdr-t_array[i]/eta*detadr)/eta #kev/kpc
-            mass=-z1/G/mu/mp*r0*r0/Msun*kpc*kev #Msun
-        if mass<=1e7:
-            mass=1e7
-        mass_array.append(mass)
-    return mass_array
-def clumping_model(x,n1,n2,n3,n4,n5):
-    return numpy.power(1+x,n1)*numpy.exp(x*n2)+n3*numpy.exp(-(x-n4)*(x-n4)/n5)
-
-for i in open('param_zzh_for_py.txt'):
-    if re.match(r'^R200\s',i):
-        R200_0=float(i.split()[1])
-        R200M=R200_0
-        r200=R200_0
-    if re.match(r'z\s',i):
-        z=float(i.split()[1])
-r_array=[]
-re_array=[]
-t_array=[]
-te_array=[]
-rsbp_array=[]
-rsbpe_array=[]
-sbp_array=[]
-sbpe_array=[]
-rcsbp_array=[]
-rcsbpe_array=[]
-csbp_array=[]
-csbpe_array=[]
-flag_tproj_array=[]
-f_sbp_array=[]
-
-name=sys.argv[1]
-M2=pymc.database.pickle.load('sampled.pickle')
-aa=50000
-bb=30000
-cc=50
-for i in open('global.cfg'):
-    if re.match(r'^sbp_data_file',i):
-        sbp_data_file=i.split()[1]
-    if re.match(r'^sbp_eninfo',i):
-        sbp_type=i.split()[3]
-    if re.match(r'^temp_data_file',i):
-        temp_data_file=i.split()[1]
-if sbp_type=='CNT':
-    cfunc_file='cfunc_for_density_fit_cnt.txt'
-elif sbp_type=='ERG':
-    cfunc_file='cfunc_for_density_fit_erg.txt'
-cm_per_pixel=cosmo.kpc_proper_per_arcmin(z).value/60*0.492*kpc*100
-for i in open(temp_data_file):
-    r,rer,t,te,flag_tproj=i.split()
-    r=float(r)
-    rer=float(rer)
-    t=float(t)
-    te=float(te)
-    r_array.append(r)
-    re_array.append(rer)
-    t_array.append(t)
-    te_array.append(te)
-    flag_tproj_array.append(flag_tproj)
-for i in open(sbp_data_file):
-    r,rer,sbp,sbpe,f_sbp=i.split()
-    r=float(r)
-    rer=float(rer)
-    sbp=float(sbp)
-    sbpe=float(sbpe)
-    if f_sbp=='c':
-        rcsbp_array.append(r)
-        rcsbpe_array.append(rer)
-        csbp_array.append(sbp)
-        csbpe_array.append(sbpe)
-    else:
-        rsbp_array.append(r)
-        rsbpe_array.append(rer)
-        sbp_array.append(sbp)
-        sbpe_array.append(sbpe)
-    f_sbp_array.append(f_sbp)
-cfunc_ori_array=[]
-r_cfunc_array=[]
-cfunc_use_array=[]
-cfunc_ori_array.append(0)
-r_cfunc_array.append(0)
-cfunc_use_array.append(0)
-cfunc_cori_array=[]
-r_cfunc_c_array=[]
-cfunc_cuse_array=[]
-cfunc_cori_array.append(0)
-r_cfunc_c_array.append(0)
-cfunc_cuse_array.append(0)
-for i in open(cfunc_file):
-    r_cfunc_array.append(float(i.split()[0]))
-    cfunc_ori_array.append(float(i.split()[1]))
-for i in open('cfunc_for_chandra_density_fit_cnt.txt'):
-    r_cfunc_c_array.append(float(i.split()[0]))
-    cfunc_cori_array.append(float(i.split()[1]))
-for i in rne_array:
-    if i==0:
-        continue
-    for j in range(len(r_cfunc_array)):
-        if r_cfunc_array[j]>i:
-            cfunc_use_array.append(cfunc_ori_array[j])
-            cfunc_cuse_array.append(cfunc_cori_array[j])
-            break
-cfunc_use_array=numpy.array(cfunc_use_array)
-cfunc_cuse_array=np.array(cfunc_cuse_array)
+def main():
+    for i in open('param_zzh_for_py.txt'):
+	if re.match(r'^R200\s',i):
+	    R200_0=float(i.split()[1])
+	if re.match(r'z\s',i):
+            z=float(i.split()[1])
+    r_array=[]
+    re_array=[]
+    t_array=[]
+    te_array=[]
+    rsbp_array=[]
+    rsbpe_array=[]
+    sbp_array=[]
+    sbpe_array=[]
+    rcsbp_array=[]
+    rcsbpe_array=[]
+    csbp_array=[]
+    csbpe_array=[]
+    flag_tproj_array=[]
+    f_sbp_array=[]
+	M2=pymc.database.pickle.load('sampled.pickle')
+	aa=50000
+	bb=30000
+	cc=50
+	for i in open('global.cfg'):
+    	if re.match(r'^sbp_data_file',i):
+        	sbp_data_file=i.split()[1]
+    	if re.match(r'^sbp_eninfo',i):
+        	sbp_type=i.split()[3]
+    	if re.match(r'^temp_data_file',i):
+        	temp_data_file=i.split()[1]
+#if sbp_type=='CNT':
+#    cfunc_file='cfunc_for_density_fit_cnt.txt'
+#elif sbp_type=='ERG':
+#    cfunc_file='cfunc_for_density_fit_erg.txt'
+#cm_per_pixel=cosmo.kpc_proper_per_arcmin(z).value/60*0.492*kpc*100
+	for i in open(temp_data_file):
+    	r,rer,t,te,flag_tproj=i.split()
+    	r=float(r)
+    	rer=float(rer)
+    	t=float(t)
+    	te=float(te)
+    	r_array.append(r)
+    	re_array.append(rer)
+    	t_array.append(t)
+    	te_array.append(te)
+    	flag_tproj_array.append(flag_tproj)
+	for i in open(sbp_data_file):
+    	r,rer,sbp,sbpe,f_sbp=i.split()
+    	r=float(r)
+    	rer=float(rer)
+    	sbp=float(sbp)
+    	sbpe=float(sbpe)
+    	if f_sbp=='c':
+        	rcsbp_array.append(r)
+        	rcsbpe_array.append(rer)
+        	csbp_array.append(sbp)
+        	csbpe_array.append(sbpe)
+    	else:
+        	rsbp_array.append(r)
+        	rsbpe_array.append(rer)
+        	sbp_array.append(sbp)
+        	sbpe_array.append(sbpe)
+    	f_sbp_array.append(f_sbp)
+#	cfunc_ori_array=[]
+#	r_cfunc_array=[]
+#	cfunc_use_array=[]
+#	cfunc_ori_array.append(0)
+#r_cfunc_array.append(0)
+#cfunc_use_array.append(0)
+#cfunc_cori_array=[]
+#r_cfunc_c_array=[]
+#cfunc_cuse_array=[]
+#cfunc_cori_array.append(0)
+#r_cfunc_c_array.append(0)
+#cfunc_cuse_array.append(0)
+#for i in open(cfunc_file):
+#    r_cfunc_array.append(float(i.split()[0]))
+#    cfunc_ori_array.append(float(i.split()[1]))
+#for i in open('cfunc_for_chandra_density_fit_cnt.txt'):
+#    r_cfunc_c_array.append(float(i.split()[0]))
+#    cfunc_cori_array.append(float(i.split()[1]))
+#for i in rne_array:
+#    if i==0:
+#        continue
+#    for j in range(len(r_cfunc_array)):
+#        if r_cfunc_array[j]>i:
+#            cfunc_use_array.append(cfunc_ori_array[j])
+#            cfunc_cuse_array.append(cfunc_cori_array[j])
+#            break
+#cfunc_use_array=numpy.array(cfunc_use_array)
+#cfunc_cuse_array=np.array(cfunc_cuse_array)
 t_array=list(t_array)
 te_array=list(te_array)
 
@@ -286,35 +189,35 @@ p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,
 numpy.save('p_all',p_all_f)
 ##############################
 
-SUM_T_array=[]
-SUM_ne_array=[]
-SUM_ne_odearray=[]
-SUM_sbp_odearray=[]
-SUM_sbp_fit=[]
-SUM_k_array=[]
-SUM_kfit_array=[]
-SUM_nfw_fit_array=[]
-SUM_mass_array=[]
-SUM_ne_cl_array=[]
+#SUM_T_array=[]
+#SUM_ne_array=[]
+#SUM_ne_odearray=[]
+#SUM_sbp_odearray=[]
+#SUM_sbp_fit=[]
+#SUM_k_array=[]
+#SUM_kfit_array=[]
+#SUM_nfw_fit_array=[]
+#SUM_mass_array=[]
+#SUM_ne_cl_array=[]
 p=[n1_f,n2_f.mean(),rs_f.mean(),a0_f.mean(),gamma0_f.mean(),k0_f.mean(),n3_f.mean(),rho_f.mean(),nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean(),delta_f.mean(),delta2_f.mean(),c4_f.mean()]
-K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f.mean(),kmod_b_f.mean(),kmod_c_f.mean(),kmod_k0_f.mean())
+#K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f.mean(),kmod_b_f.mean(),kmod_c_f.mean(),kmod_k0_f.mean())
 p_nth=[nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean()]
-m_factor=[]
+#m_factor=[]
 p_MMnfw=[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()]
-for j in range(len(rne_array)):
-    r=rne_array[j]
-    e_ori=4*pi*rho_f.mean()*np.power(rs_f.mean(),3)/r*np.log((rs_f.mean()+r)/rs_f.mean())
-    e_mod=modnfw_readarray.calc('n',r,p_MMnfw,t_total)/r+modnfw_readarray.calc('r',r,p_MMnfw,t_total)
-    m_tmp=e_mod/e_ori
-    m_factor.append(m_tmp)
-m_factor=numpy.array(m_factor)
-T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
+#for j in range(len(rne_array)):
+#    r=rne_array[j]
+#    e_ori=4*pi*rho_f.mean()*np.power(rs_f.mean(),3)/r*np.log((rs_f.mean()+r)/rs_f.mean())
+#    e_mod=modnfw_readarray.calc('n',r,p_MMnfw,t_total)/r+modnfw_readarray.calc('r',r,p_MMnfw,t_total)
+#    m_tmp=e_mod/e_ori
+#    m_factor.append(m_tmp)
+#m_factor=numpy.array(m_factor)
+#T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
 #    SUM_T_array.append(T_array)
-p1=[*p,T_array]
-ne_array=[]
-ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
+#p1=[*p,T_array]
+#ne_array=[]
+#ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
 #    SUM_ne_array.append(ne_array)
-mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
+#mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
 #    SUM_mass_array.append(mass_array)
 nfw_fitted_array=[]
 for j in range(len(rne_array)):

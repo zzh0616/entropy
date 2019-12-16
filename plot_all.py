@@ -53,6 +53,10 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             sbpe_array.append(np.float(sbpe))
             rsbp_array.append(np.float(r))
             rsbpe_array.append(np.float(re))
+        info_file=name+"/"+name+"_suminfo.txt"
+        for i in open(info_file):
+            if the_re.match(r'^k200',i):
+                k200=float(i.split()[1])
         r200 = np.float(dat["r200"])
         sbp_array = np.array(sbp_array)
         sbpe_array = np.array(sbpe_array)
@@ -153,7 +157,8 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             if i==len(r_model)-1:
                 print('something wrong with 0.3r500')
                 knorm_index=0
-        k_norm=k_fit[knorm_index]
+#        k_norm=k_fit[knorm_index]
+        k_norm=k200
         c_factor=np.power(1+0.3,cp_p)*np.exp(0.3*(cp_e))+0+cp_g0*np.exp(-(0.3-cp_x0)*(0.3-cp_x0)/cp_sigma)
 #            k_norm=k_norm*np.power(c_factor,-2/3)
         r_norm=r200
@@ -172,8 +177,8 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
 #            print(ymin,ymax)
 #            ax.loglog([r200-1,r200],[1e12,1e15])
             ax=axarr[1][1]
-            ax.loglog(r_model,k_fit,'b')
-            ax.fill_between(r_model,k_fit_down,k_fit_up,color='grey')
+            ax.loglog(r_model,k_fit/k_norm,'b')
+            ax.fill_between(r_model,k_fit_down/k_norm,k_fit_up/k_norm,color='grey')
             ax.yaxis.set_ticks_position('right')
             ax.text(1.25,0.5,'Entropy(keV cm^2)',rotation=90,transform=ax.transAxes,verticalalignment="center",horizontalalignment="left")
             ax.set_xlabel('radius (kpc)')
@@ -321,7 +326,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         plt.ylabel(r'Entropy (k/${\rm k(r_{500})}$)')
 #        plt.ylabel('Entropy')
         std_x=[0.1,1.5]
-        std_y=[0.48*0.27,9.36*0.27]
+        std_y=[0.112,2.202]
         plt.xlim(0.07,1.5)
         plt.ylim(0.1,9)
         plt.loglog(std_x,std_y,'k',linewidth=1.2)
