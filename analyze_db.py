@@ -606,9 +606,10 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
             sum_out.append(SUM_mass_array)
         if 'n' in out_array:
             sum_out.append(SUM_nfw_fit_array)
-        if 's' in out_array:
+        if 'r' in out_array:
             sum_out.append(SUM_sbp_fit)
             sum_out.append(SUM_csbp_fit)
+            sum_out.append(SUM_Tproj_array)
     return sum_out
 
 if __name__=="__main__":

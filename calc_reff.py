@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-#$1 name of temperature data file ($f.txt)
-from scipy.optimize import minimize
-from scipy.optimize import fsolve
-from scipy.integrate import odeint
-from scipy.integrate import ode
-from scipy.integrate import quad
 from zzh_model import gpob
 from numpy.random import random
 import zzh_model
 import deproject_model
 import modnfw_readarray
+from modnfw_readarray import lintp
 import matplotlib.pyplot as plt
 import sys
 import math
@@ -41,15 +36,6 @@ tmp3=list(range(41,3001,5))
 tmp1.extend(tmp2)
 tmp1.extend(tmp3)
 rne_array=numpy.array(tmp1)
-#tmp=sys.argv[0].split('/')
-#for i in range(len(tmp)-1):
-#    script_dir=script_dir+tmp[i]
-#    script_dir=script_dir+'/'
-#ta1=numpy.load(script_dir+'lrs_ori.npy')
-#ta2=numpy.load(script_dir+'lrs_dvr.npy')
-#ta3=numpy.load(script_dir+'hrs_ori.npy')
-#ta4=numpy.load(script_dir+'hrs_dvr.npy')
-#t_total=[ta1,ta2,ta3,ta4]
 
 tmp_array=[]
 tmp_array.append(0)
@@ -61,12 +47,16 @@ for i in rne_array:
     if i==rne_array[-1]:
         tmp_array.append(1.5*i-0.5*i_before)
     i_before=i
-def main():
+def main(name):
     for i in open('param_zzh_for_py.txt'):
 	if re.match(r'^R200\s',i):
 	    R200_0=float(i.split()[1])
 	if re.match(r'z\s',i):
-            z=float(i.split()[1])
+        z=float(i.split()[1])
+	if re.match(r'aa\s',i):
+		aa=float(i.split()[1])
+		bb=float(i.split()[2])
+		cc=float(i.split()[3])
     r_array=[]
     re_array=[]
     t_array=[]
@@ -82,20 +72,11 @@ def main():
     flag_tproj_array=[]
     f_sbp_array=[]
 	M2=pymc.database.pickle.load('sampled.pickle')
-	aa=50000
-	bb=30000
-	cc=50
 	for i in open('global.cfg'):
     	if re.match(r'^sbp_data_file',i):
         	sbp_data_file=i.split()[1]
-    	if re.match(r'^sbp_eninfo',i):
-        	sbp_type=i.split()[3]
     	if re.match(r'^temp_data_file',i):
         	temp_data_file=i.split()[1]
-#if sbp_type=='CNT':
-#    cfunc_file='cfunc_for_density_fit_cnt.txt'
-#elif sbp_type=='ERG':
-#    cfunc_file='cfunc_for_density_fit_erg.txt'
 #cm_per_pixel=cosmo.kpc_proper_per_arcmin(z).value/60*0.492*kpc*100
 	for i in open(temp_data_file):
     	r,rer,t,te,flag_tproj=i.split()
@@ -125,69 +106,13 @@ def main():
         	sbp_array.append(sbp)
         	sbpe_array.append(sbpe)
     	f_sbp_array.append(f_sbp)
-#	cfunc_ori_array=[]
-#	r_cfunc_array=[]
-#	cfunc_use_array=[]
-#	cfunc_ori_array.append(0)
-#r_cfunc_array.append(0)
-#cfunc_use_array.append(0)
-#cfunc_cori_array=[]
-#r_cfunc_c_array=[]
-#cfunc_cuse_array=[]
-#cfunc_cori_array.append(0)
-#r_cfunc_c_array.append(0)
-#cfunc_cuse_array.append(0)
-#for i in open(cfunc_file):
-#    r_cfunc_array.append(float(i.split()[0]))
-#    cfunc_ori_array.append(float(i.split()[1]))
-#for i in open('cfunc_for_chandra_density_fit_cnt.txt'):
-#    r_cfunc_c_array.append(float(i.split()[0]))
-#    cfunc_cori_array.append(float(i.split()[1]))
-#for i in rne_array:
-#    if i==0:
-#        continue
-#    for j in range(len(r_cfunc_array)):
-#        if r_cfunc_array[j]>i:
-#            cfunc_use_array.append(cfunc_ori_array[j])
-#            cfunc_cuse_array.append(cfunc_cori_array[j])
-#            break
-#cfunc_use_array=numpy.array(cfunc_use_array)
-#cfunc_cuse_array=np.array(cfunc_cuse_array)
 	t_array=list(t_array)
 	te_array=list(te_array)
+	sum_array=np.load('sum_array.npy')
 
-#n1_f=N1_0
-#n2_f=M2.trace('n2')[:]
-#rs_f=M2.trace('rs')[:]
-#a0_f=M2.trace('a0')[:]
-#gamma0_f=M2.trace('gamma0')[:]
-#k0_f=M2.trace('k0')[:]
-#n3_f=M2.trace('n3')[:]
-#rho_f=M2.trace('rho')[:]
-#ne0_f=M2.trace('ne0')[:]
-#T0_f=M2.trace('T0')[:]
 sbp_c_f=M2.trace('sbp_c')[:]
-#delta_f=M2.trace('delta')[:]
-#delta2_f=M2.trace('delta2')[:]
-#nth_a_f=M2.trace('nth_a')[:]
-#nth_b_f=M2.trace('nth_b')[:]
-#nth_gamma_f=M2.trace('nth_gamma')[:]
-#kmod_a_f=M2.trace('kmod_a')[:]
-#kmod_b_f=M2.trace('kmod_b')[:]
-#kmod_c_f=M2.trace('kmod_c')[:]
-#kmod_k0_f=M2.trace('kmod_k0')[:]
-#cp_p_f=M2.trace('cp_p')[:]
-#cp_e_f=M2.trace('cp_e')[:]
-#cp_g0_f=M2.trace('cp_g0')[:]
-#cp_x0_f=M2.trace('cp_x0')[:]
-#cp_sigma_f=M2.trace('cp_sigma')[:]
-#c4_f=M2.trace('c4')[:]
 ne_array=[]
 T_array=[]
-#p_all_f=numpy.array([n2_f,rs_f,a0_f,gamma0_f,k0_f,n3_f,rho_f,ne0_f,T0_f,sbp_c_f,delta_f,delta2_f,nth_a_f,nth_b_f,nth_gamma_f,kmod_a_f,kmod_b_f,kmod_c_f,kmod_k0_f,cp_p_f,cp_e_f,cp_g0_f,cp_x0_f,cp_sigma_f,c4_f])
-#numpy.save('p_all',p_all_f)
-##############################
-
 #SUM_T_array=[]
 #SUM_ne_array=[]
 #SUM_ne_odearray=[]
@@ -198,45 +123,9 @@ T_array=[]
 #SUM_nfw_fit_array=[]
 #SUM_mass_array=[]
 #SUM_ne_cl_array=[]
-#p=[n1_f,n2_f.mean(),rs_f.mean(),a0_f.mean(),gamma0_f.mean(),k0_f.mean(),n3_f.mean(),rho_f.mean(),nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean(),delta_f.mean(),delta2_f.mean(),c4_f.mean()]
-#K_ARRAY_FIT=entropy_model(rne_array,kmod_a_f.mean(),kmod_b_f.mean(),kmod_c_f.mean(),kmod_k0_f.mean())
-#p_nth=[nth_a_f.mean(),nth_b_f.mean(),nth_gamma_f.mean()]
-#m_factor=[]
-#p_MMnfw=[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()]
-#for j in range(len(rne_array)):
-#    r=rne_array[j]
-#    e_ori=4*pi*rho_f.mean()*np.power(rs_f.mean(),3)/r*np.log((rs_f.mean()+r)/rs_f.mean())
-#    e_mod=modnfw_readarray.calc('n',r,p_MMnfw,t_total)/r+modnfw_readarray.calc('r',r,p_MMnfw,t_total)
-#    m_tmp=e_mod/e_ori
-#    m_factor.append(m_tmp)
-#m_factor=numpy.array(m_factor)
-#T_array=calc_T(rne_array,K_ARRAY_FIT,m_factor,p)
-#    SUM_T_array.append(T_array)
-#p1=[*p,T_array]
-#ne_array=[]
-#ne_array=numpy.power(K_ARRAY_FIT/T_array,-1.5)
-#    SUM_ne_array.append(ne_array)
-#mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
-#    SUM_mass_array.append(mass_array)
-#nfw_fitted_array=[]
-#for j in range(len(rne_array)):
-#    nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f.mean(),rs_f.mean(),delta_f.mean(),delta2_f.mean()])
-#    nfw_fitted_array.append(nfw_fitted)
-#    SUM_nfw_fit_array.append(nfw_fitted_array)
-#ne_cl_array=clumping_model(rne_array/R200_0,cp_p_f.mean(),cp_e_f.mean(),cp_g0_f.mean(),cp_x0_f.mean(),cp_sigma_f.mean())*ne_array
-#for j in range(len(ne_cl_array)):
-#    if ne_cl_array[j]<ne_array[j]:
-#        ne_cl_array[j]=ne_array[j]
-#ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
-#    SUM_ne_cl_array.append(ne_cl_array)
-#ne_array=numpy.insert(ne_array,0,0.0)
 sbp_fit=[]
 tmp_r_use=rne_array
 sbp_model_array=[]
-#for j in range(len(rsbp_array)):
-#    a=deproject_model.calc_sb(rsbp_array[j],tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
-#    a=a+sbp_c_f.mean()
-#    sbp_model_array.append(a)
 sbp_model_array=np.array(sbp_model_array)
 t_model_array=[]
 for i in range(len(r_array)):

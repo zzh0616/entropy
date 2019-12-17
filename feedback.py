@@ -87,7 +87,7 @@ def main():
     cfunc_lx_use_array=np.array(cfunc_lx_use_array)
     param_file="p_all.npy"
     p=np.load(param_file)
-    SUM_array=analyze_db.main(t_total,name,True,'ktdcmns',False)
+    SUM_array=analyze_db.main(t_total,name,True,'ktdcmnr',False)
     np.save('sum_array',SUM_array)
     sum_k_array=np.array(SUM_array[0])
     sum_T_array=np.array(SUM_array[1])

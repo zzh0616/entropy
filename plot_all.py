@@ -261,15 +261,14 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
                 plt.text(0.1,2.6,'other\'s result',color='k')
             plt.savefig(name+'/'+name+'_k_scaled.pdf')
             pylab.figure('k_global')
-            csb_file=name+'/'+name+'_csb.txt'
-            fi=open(csb_file)
-            csb=float(fi.read()[:-1])
-            if csb <= 0.075:
+            info_file=name+'/'+name+'_suminfo.txt'
+            for i in open(info_file,'r'):
+                if the_re.match(r'^tcool',i):
+                    tcool=float(i.split()[1])
+            if tcool <= 7.7:
+                color='b'
+            elif tcool > 7.7  :
                 color='r'
-            elif csb >=0.15 :
-                color='c'
-            else:
-                color='g'
             plt.loglog(r_entropy, k_entropy,color,linewidth=0.5)
             plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.3,color='grey')
         if mode == "5":
@@ -323,7 +322,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
     if mode == "2":
         pylab.figure('k_global')
         plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
-        plt.ylabel(r'Entropy (k/${\rm k(r_{500})}$)')
+        plt.ylabel(r'Entropy (k/${\rm k_{200}}$)')
 #        plt.ylabel('Entropy')
         std_x=[0.1,1.5]
         std_y=[0.112,2.202]
@@ -331,7 +330,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         plt.ylim(0.1,9)
         plt.loglog(std_x,std_y,'k',linewidth=1.2)
         plt.plot([0.08,0.11],[7,7],'k')
-        plt.plot([0.08,0.11],[5,5],'c')
+        plt.plot([0.08,0.11],[5,5],'b')
         plt.plot([0.08,0.11],[3.6,3.6],'r')
         plt.text(0.12,6.85,'Baseline entropy profile from Voit+05',fontsize=8)
         plt.text(0.12,4.9,'Scaled entropy porfiles of cool core clusters',fontsize=8,color='k')
