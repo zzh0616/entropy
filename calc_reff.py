@@ -114,6 +114,8 @@ def main(name,sum_array=[]):
         t_array.append(t)
         te_array.append(te)
         flag_tproj_array.append(flag_tproj)
+    t_array=np.array(t_array)
+    te_array=np.array(te_array)
     for i in open(sbp_data_file):
         r,rer,sbp,sbpe,f_sbp=i.split()
         r=float(r)
@@ -202,14 +204,15 @@ def main(name,sum_array=[]):
                 p_this=len(rsbp_array)+len(r_array)+len(rmass_array)+j
                 reffi_1[p_this]=reffi_1[p_this]+np.power(csbp_fit-csbp_model_array[j],2)
                 reffi_2[p_this]=reffi_2[p_this]+np.power(csbp_fit-csbp_array[j],2)
-    reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.10),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
+    merr=0.15+te_array.sum()/t_array.sum()
+    reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
 
     reffi_1=reffi_1*reffi_1*400
 #print(reffi_1,reffi_2)
     reffi=1-reffi_2/reffi_1
-    print(reffi)
+#    print(reffi)
     reff=reffi.sum()/(len(t_array)+len(rsbp_array)+len(rmass_array)+len(rcsbp_array))
-    print(reff)
+#    print(reff)
     return reff
 if __name__=='__main__':
     name=sys.argv[1]

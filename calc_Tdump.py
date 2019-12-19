@@ -4,8 +4,7 @@ import sys
 import json
 import re
 
-def main():
-    name=sys.argv[1]
+def main(name):
     json_file=name+'_plt.json'
     fi=open(json_file,'r')
     dat=json.load(fi)
@@ -24,8 +23,7 @@ def main():
     fi.close()
     return 0
 
-def calc_a0():
-    name=sys.argv[1]
+def calc_a0(name):
     info_file=name+'_suminfo.txt'
     for f in open(info_file,'r'):
         if re.match(r'^r200',i):
@@ -36,4 +34,9 @@ def calc_a0():
     print(a0)
 
 if __name__=='__main__':
-    main()
+    name=sys.argv[1]
+    mode=sys.argv[2]
+    if mode == "calc_a0":
+        calc_a0(name)
+    else:
+        main(name)
