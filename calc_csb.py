@@ -8,7 +8,7 @@ from astropy.cosmology import FlatLambdaCDM
 cosmo=FlatLambdaCDM(H0=71,Om0=0.27,Tcmb0=2.725)
 pi=3.1415926
 mpc=3.086e24 #cm
-def main(name='',iput='no',sbp_array=[],t_array=[],ne_array=[],sbp_c=0):
+def main(name='',iput='no',sbp_array=[],t_array=[],ne_array=[],sbp_c=0,r500=-1):
     hlim=400
     llim=40
     json_file=name+'_plt.json'
@@ -23,6 +23,13 @@ def main(name='',iput='no',sbp_array=[],t_array=[],ne_array=[],sbp_c=0):
         for i in open(result_file):
             if re.match(r'^sbp_c,',i):
                 sbp_c=float(i.split(',')[1])
+        summary_file=name+'_suminfo.txt'
+        for i in open(summary_file):
+            if re.match(r'^r500',i):
+                r500=float(i.split()[1])
+    if r500 == -1:
+        print('input error: please check the input of r500')
+        return -1
     sbp_array=sbp_array-sbp_c
     param_file='param_zzh_for_py.txt'
     for i in open(param_file):
@@ -36,9 +43,6 @@ def main(name='',iput='no',sbp_array=[],t_array=[],ne_array=[],sbp_c=0):
         rcfunc_array.append(float(i.split()[0]))
         cfunc_array.append(float(i.split()[1]))
     summary_file=name+'_suminfo.txt'
-    for i in open(summary_file):
-        if re.match(r'^r500',i):
-            r500=float(i.split()[1])
     c1=0
     c2=0
     for i in range(len(r_array)):

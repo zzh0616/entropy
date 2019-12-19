@@ -255,7 +255,7 @@ def main():
                         flag2=1
         Tave=t_tmp/count
         sum_Tave_array.append(Tave)
-        csb,tcool=calc_csb.main(name=name,iput='yes',t_array=T_array,sbp_array=sbp_array,ne_array=ne_array,sbp_c=sbp_c)
+        csb,tcool=calc_csb.main(name=name,iput='yes',t_array=T_array,sbp_array=sbp_array,ne_array=ne_array,sbp_c=sbp_c,r500=r500)
         sum_csb_array.append(csb)
         sum_tcool_array.append(tcool)
     out_file=name+'_suminfo.txt'
