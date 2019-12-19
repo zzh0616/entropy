@@ -52,7 +52,7 @@ def reassign(rout_array,rin_array,yin_array):
     yout_array=np.array(yout_array)
     return yout_array
 
-def main(name):
+def main(name,sum_array=[]):
     tmp1=list(range(1,11))
     tmp2=list(range(11,41,3))
     tmp3=list(range(41,3001,5))
@@ -135,7 +135,8 @@ def main(name):
         flag_csbp=True
     else:
         flag_csbp=False
-    sum_array=np.load('sum_array.npy',allow_pickle=True)
+    if sum_array==[]:
+        sum_array=np.load('sum_array.npy',allow_pickle=True)
     sum_t_array=np.array(list(sum_array[1]),dtype=float)
     sum_sbp_array=np.array(list(sum_array[6]),dtype=float)
     sum_csbp_array=np.array(list(sum_array[7]),dtype=float)
@@ -209,7 +210,7 @@ def main(name):
     print(reffi)
     reff=reffi.sum()/(len(t_array)+len(rsbp_array)+len(rmass_array)+len(rcsbp_array))
     print(reff)
-    return 0
+    return reff
 if __name__=='__main__':
     name=sys.argv[1]
     main(name)

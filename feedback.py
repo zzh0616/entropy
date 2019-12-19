@@ -8,6 +8,7 @@ import re
 from matplotlib import pyplot as plt
 import analyze_db
 import calc_csb
+import calc_reff
 from modnfw_readarray import mod_nfw,calc
 # calculate the value (in kpc) of the r_delta(delta=200,etc.)
 def critical_radius(od,p_Mnfw,z,t_total):
@@ -53,6 +54,7 @@ def main():
     name=sys.argv[1]
     cfunc_file=sys.argv[2]
     dm=np.float(sys.argv[3])
+    mode_sum=sys.argv[4]
     script_dir=''
     for i in range(len(path)-1):
         script_dir=script_dir+path[i]
@@ -87,15 +89,33 @@ def main():
     cfunc_lx_use_array=np.array(cfunc_lx_use_array)
     param_file="p_all.npy"
     p=np.load(param_file)
-    SUM_array=analyze_db.main(t_total,name,True,'ktdcmnr',False)
-    np.save('sum_array',SUM_array)
-    sum_k_array=np.array(SUM_array[0])
-    sum_T_array=np.array(SUM_array[1])
-    sum_ne_array=np.array(SUM_array[2])
-    sum_ne_cl_array=np.array(SUM_array[3])
-    sum_mass_array=np.array(SUM_array[4])
-    sum_mnfw_array=np.array(SUM_array[5])
-    sum_sbp_array=np.array(SUM_array[6])
+    if mode_sum == "calc":
+        SUM_array=analyze_db.main(t_total,name,True,'ktdcmnr',False)
+        np.save('sum_array',SUM_array)
+        sum_k_array=np.array(SUM_array[0])
+        sum_T_array=np.array(SUM_array[1])
+        sum_ne_array=np.array(SUM_array[2])
+        sum_ne_cl_array=np.array(SUM_array[3])
+        sum_mass_array=np.array(SUM_array[4])
+        sum_mnfw_array=np.array(SUM_array[5])
+        sum_sbp_array=np.array(SUM_array[6])
+        sum_csb_array=np.array(SUM_array[7])
+        sum_tproj_array=np.array(SUM_array[8])
+    elif mode_sum == "read":
+        sumarray_file='sum_array.npy'
+        SUM_array=np.load(sumarray_file,allow_pickle=True)
+        sum_k_array=np.array(list(SUM_array[0]),dtype=float)
+        sum_T_array=np.array(list(SUM_array[1]),dtype=float)
+        sum_ne_array=np.array(list(SUM_array[2]),dtype=float)
+        sum_ne_cl_array=np.array(list(SUM_array[3]),dtype=float)
+        sum_mass_array=np.array(list(SUM_array[4]),dtype=float)
+        sum_mnfw_array=np.array(list(SUM_array[5]),dtype=float)
+        sum_sbp_array=np.array(list(SUM_array[6]),dtype=float)
+        sum_csb_array=np.array(list(SUM_array[7]),dtype=float)
+        sum_tproj_array=np.array(list(SUM_array[8]),dtype=float)
+    else:
+        print("please check the mode_sum parameter")
+        return -1
     sum_feedback_array=[]
     sum_dq_array=[]
     sum_EL_array=[]
@@ -259,6 +279,7 @@ def main():
     sum_fg3000k_array=np.sort(sum_fg3000k_array)
     sum_csb_array=np.sort(sum_csb_array)
     sum_tcool_array=np.sort(sum_tcool_array)
+    reff=calc_reff.main(name,SUM_array)
     print('r200:',sum_r200_array[ind_50],sum_r200_array[ind_16],sum_r200_array[ind_84],file=fi)
     print('r500:',sum_r500_array[ind_50],sum_r500_array[ind_16],sum_r500_array[ind_84],file=fi)
     print('m200:',sum_m200_array[ind_50],sum_m200_array[ind_16],sum_m200_array[ind_84],file=fi)
@@ -278,6 +299,7 @@ def main():
     print('fg3000k:',sum_fg3000k_array[ind_50],sum_fg3000k_array[ind_16],sum_fg3000k_array[ind_84],file=fi)
     print('tcool:', sum_tcool_array[ind_50],sum_tcool_array[ind_16],sum_tcool_array[ind_84],file=fi)
     print('csb:',sum_csb_array[ind_50],sum_csb_array[ind_16],sum_csb_array[ind_84],file=fi)
+    print('reff:',reff,file=fi)
     fi.close()
     sum_feedback_array=np.array(sum_feedback_array)
     sum_feedback_array.sort(0)
