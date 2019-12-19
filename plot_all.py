@@ -22,10 +22,15 @@ import pylab
 import re as the_re
 import os
 import pymc
+from calc_reff import reassign
 mode = sys.argv[1]
 if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
     if mode == "2":
         pylab.figure('k_global')
+        r_scaled_array=np.arange(0.001,1.4,0.001)
+        sum_knew_array=[]
+        sum_knew_cc_array=[]
+        sum_knew_ncc_array=[]
     if mode == "1":
         pp=PdfPages('all.pdf')
     if mode == "5":
@@ -57,7 +62,9 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         for i in open(info_file):
             if the_re.match(r'^k200',i):
                 k200=float(i.split()[1])
-        r200 = np.float(dat["r200"])
+            if the_re.match(r'^r200',i):
+                r200=float(i.split()[1])
+        R200_0 = np.float(dat["r200"])
         sbp_array = np.array(sbp_array)
         sbpe_array = np.array(sbpe_array)
         rsbp_array = np.array(rsbp_array)
@@ -117,7 +124,6 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         t_fit_down = np.array(t_fit_down)
         t_fit_up = dat["temperature_model"][2]
         t_fit_up = np.array(t_fit_up)
-        r200= np.float(dat["r200"])
         param_file=name+"/"+name+"_result.csv"
         fitting_param_file=name+"/"+"param_zzh_for_py.txt"
         for i in open(fitting_param_file):
@@ -265,12 +271,21 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             for i in open(info_file,'r'):
                 if the_re.match(r'^tcool',i):
                     tcool=float(i.split()[1])
+            r_entropy_new=r_scaled_array*r200
+            k_entropy_new=reassign(r_entropy_new,r_model,k_entropy)
+#            print(r_entropy[0])
+#            print(k_entropy)
+#            print(r_entropy)
+#            print(k_entropy_new)
+            sum_knew_array.append(k_entropy_new)
             if tcool <= 7.7:
                 color='b'
+                sum_knew_cc_array.append(k_entropy_new)
             elif tcool > 7.7  :
                 color='r'
-            plt.loglog(r_entropy, k_entropy,color,linewidth=0.5)
-            plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.3,color='grey')
+                sum_knew_ncc_array.append(k_entropy_new)
+#            plt.loglog(r_entropy, k_entropy,color,linewidth=0.5)
+#            plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.3,color='grey')
         if mode == "5":
             if count5==0:
                 plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,alpha=0.5,color='grey')
@@ -304,7 +319,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             plt.loglog(r_model/r200,k_ori/k_norm,'b',alpha=0.1)
             plt.loglog(r_model/r200,k_fit/k_norm,'r',alpha=0.3)
         if mode == "4":
-            c_factor_array=np.power(1+r_model/r200,cp_p)*np.exp(r_model/r200*(cp_e))+0+cp_g0*np.exp(-(r_model/r200-cp_x0)*(r_model/r200-cp_x0)/cp_sigma)
+            c_factor_array=np.power(1+r_model/R200_0,cp_p)*np.exp(r_model/R200_0*(cp_e))+0+cp_g0*np.exp(-(r_model/R200_0-cp_x0)*(r_model/R200_0-cp_x0)/cp_sigma)
             if c_factor_array.min()<0.95:
                 print(name)
                 for ii in range(len(c_factor_array)):
@@ -321,6 +336,14 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
             plt.plot(r_model/r200,c_factor_array,color='grey',linewidth=0.4)
     if mode == "2":
         pylab.figure('k_global')
+        sum_knew_cc_array=np.array(sum_knew_cc_array)
+        sum_knew_ncc_array=np.array(sum_knew_ncc_array)
+        sum_knew_cc_array.sort(0)
+        sum_knew_ncc_array.sort(0)
+        plt.loglog(r_scaled_array,sum_knew_cc_array[int(len(sum_knew_cc_array)*0.5)],'b')
+        plt.loglog(r_scaled_array,sum_knew_ncc_array[int(len(sum_knew_ncc_array)*0.5)],'r')
+        plt.fill_between(r_scaled_array,sum_knew_cc_array[int(len(sum_knew_cc_array)*0.16)],sum_knew_cc_array[int(len(sum_knew_cc_array)*0.84)],color='b',alpha=0.5)
+        plt.fill_between(r_scaled_array,sum_knew_ncc_array[int(len(sum_knew_ncc_array)*0.16)],sum_knew_ncc_array[int(len(sum_knew_ncc_array)*0.84)],color='r',alpha=0.5)
         plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
         plt.ylabel(r'Entropy (k/${\rm k_{200}}$)')
 #        plt.ylabel('Entropy')
@@ -347,7 +370,7 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
 #        plt.ylim(0.5,3)
         plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
         plt.ylabel(r'$(<\rho^2>/<\rho>^2)^{0.5}$')
-        reference_factor=np.sqrt(np.power(1+r_model/r200,-3.7)*np.exp(r_model/r200*(3.7))+2.0*np.exp(-(r_model/r200-0.018)*(r_model/r200-0.018)/0.0002))
+        reference_factor=np.sqrt(np.power(1+r_model/R200_0,-3.7)*np.exp(r_model/R200_0*(3.7))+2.0*np.exp(-(r_model/R200_0-0.018)*(r_model/R200_0-0.018)/0.0002))
         plt.plot(r_model/r200,reference_factor,'b')
         ax=plt.gca()
 #        ax.set_yticks([1,2,3,4,5,6,7,8,9,10])
@@ -358,26 +381,5 @@ if mode == "1" or mode == "2" or mode =="3" or mode == "4" or mode == "5":
         plt.text(0.15,2.73,'Reference clumping factor profile from Vazza+13',color='b')
         plt.text(0.15,2.48,'Clumping factor profiles of sample clusters')
         plt.savefig('clumping_factor.pdf')
-if mode == 'c':
-    for name in sys.argv[2]:
-        json_file = name+"/"+name+"_plt.json"
-        db_file= name+"/"+'sample.pickle'
-        r_model=np.array(json_file["radius_model"],dtype=float)
-        M2=pymc.database.pickle.load(db_file)
-        a0_f=M2.trace('a0')[:]
-        r200=np.float(json_file['r200'])
-        gamma0_f=M2.trace('gamma0')[:]
-        k0_f=M2.trace('k0')[:]
-        kmod_a_f=M2.trace('kmod_a')[:]
-        kmod_b_f=M2.trace('kmod_b')[:]
-        kmod_c_f=M2.trace('kmod_c')[:]
-        kmod_k0_f=M2.trace('kmod_k0')[:]
-        k_ori_total=[]
-        k_mod_total=[]
-        for i in range(len(a0_f)):
-            k_ori=a0_f[i]*np.power(r_model,gamma0_f[i])+k0_f[i]
-            k_mod=k_fit #temp
-            k_ori_total.append(k_ori)
-            k_mod_total.append(k_mod)
 
 
