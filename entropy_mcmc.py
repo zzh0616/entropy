@@ -3,10 +3,10 @@
 ## $2 temperature parameter file
 ## $3 sbp data; 'radius err sbp err' radius in kpc
 ## $4 cooling function file , radius in kpc, radius should match density
-## $5 cm_per_pixel for this source
-## $6 fitted entropy profile for this source !!not used for this version
-## $7 outfile name for fitted surface brightness
-## $8 outfile name for fitted entropy
+## $5 cm_per_pixel for this source !! no need anymore
+## $6 cooling function file for chandra fit
+## $7 outfile name for fitted surface brightness !not used
+## $8 outfile name for fitted entropy ! not used
 ####
 #tempory var define area
 ####
@@ -45,7 +45,7 @@ pi=3.1415926
 cm_per_pixel=np.float(sys.argv[5])
 name=sys.argv[1][0:-4]
 print(name)
-print(cm_per_pixel)
+#print(cm_per_pixel)
 G=6.67e-11 #m^3 kg^-1 s^-2
 mp=1.67e-27  #kg
 kev=1.6e-16 #J
@@ -620,7 +620,7 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
             print(t_this,t_array[i])
         lhood=lhood+gpob(t_this,t_array[i],te_tmp)*1.3*T_FACTOR
     for i in range(len(rsbp_array)):
-        sbp_this=deproject_model.calc_sb(rsbp_array[i],tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
+        sbp_this=deproject_model.calc_sb(rsbp_array[i],tmp_array,ne_cl_array,cfunc_use_array)
         sbp_this=abs(sbp_this)
         sbp_this=sbp_this+sbp_c
         sbp_this=abs(sbp_this)
@@ -634,7 +634,7 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         else:
             lhood=lhood+gpob(sbp_this,tmp_sbp,tmp_sbpe)*0.5*SBP_FACTOR
     for i in range(len(rcsbp_array)):
-        sbp_this=deproject_model.calc_sb(rcsbp_array[i],tmp_array,ne_cl_array,cfunc_cuse_array,cm_per_pixel)
+        sbp_this=deproject_model.calc_sb(rcsbp_array[i],tmp_array,ne_cl_array,cfunc_cuse_array)
         sbp_this=abs(sbp_this)
 #        sbp_this=sbp_this+sbp_c*0
 #        sbp_this=abs(sbp_this)
@@ -769,12 +769,12 @@ for i in range(len(ne0_f)):
     t2d_array=[]
     csbp_fit=[]
     for j in rne_array:
-        a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
+        a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array)
         a=a+sbp_c_f[i]
         t2d=deproject_model.calc_projT(j,tmp_array,T_array,ne_array)
         sbp_fit.append(a)
         t2d_array.append(t2d)
-        b=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_cuse_array,cm_per_pixel)
+        b=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_cuse_array)
         csbp_fit.append(b)
     SUM_sbp_fit.append(sbp_fit)
     SUM_Tproj_array.append(t2d_array)

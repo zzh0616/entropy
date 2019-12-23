@@ -364,12 +364,12 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
         t2d_array=[]
         csbp_fit=[]
         for j in rne_array:
-            a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array,cm_per_pixel)
+            a=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_use_array)
             a=a+sbp_c_f[i]
             t2d=deproject_model.calc_projT(j,tmp_array,T_array,ne_array)
             sbp_fit.append(a)
             t2d_array.append(t2d)
-            b=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_cuse_array,cm_per_pixel)
+            b=deproject_model.calc_sb(j,tmp_array,ne_cl_array,cfunc_cuse_array)
             csbp_fit.append(b)
         SUM_sbp_fit.append(sbp_fit)
         SUM_Tproj_array.append(t2d_array)

@@ -33,7 +33,7 @@ def adjust(par,p_min_array,p_max_array):
 #            [par[2],par[5]]=swap(par[2],par[5])
     return par
 
-def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array,cfunc_use_array):
+def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array,cfunc_use_array,flag_array,model):
     pro=0
     par=adjust(par,p_min_array,p_max_array)
     den_array=[]
@@ -52,11 +52,12 @@ def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array
         print('error:model does not exist yet')
         return 'NaN'
     for i in range(len(r_array)):
-        if i==0:
+        if r_array[i]==0:
             continue
-        sb_m=deproject_model.calc_sb(r_array[i],r_use_array,den_array,cfunc_use_array,cm_per_pixel)
-        sb_m=sb_m+bkg
-        pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
+        if flag_array[i]=='o':
+            sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_use_array)
+            sb_m=sb_m+bkg
+            pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
     return -pro
 
 def plot_result(par):
@@ -85,7 +86,7 @@ def plot_result(par):
     for i in range(0,4900,10):
         if i==0:
             continue
-        plot_y.append(deproject_model.calc_sb(i,r_use_array,den,cfunc_use_array,cm_per_pixel)+bkg)
+        plot_y.append(deproject_model.calc_sb(i,r_use_array,den,cfunc_use_array)+bkg)
     plt.loglog(range(0,4900,10),plot_y,'r-')
     plt.errorbar(r_array,sb_array,xerr=re_array,yerr=sbe_array,color='k',linestyle='none')
 #    print(den)
@@ -93,10 +94,17 @@ def plot_result(par):
     return 0
 
 def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
+    tmp1=list(range(1,11))
+    tmp2=list(range(11,41,3))
+    tmp3=list(range(41,3001,5))
+    tmp1.extend(tmp2)
+    tmp1.extend(tmp3)
+    rne_array=numpy.array(tmp1)
     r_array=[]
     re_array=[]
     sb_array=[]
     sbe_array=[]
+    flag_array=[]
     cfunc_ori_array=[]
     r_cfunc_array=[]
     cfunc_use_array=[]
@@ -106,6 +114,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
     p0=[]
     p_min_array=[]
     p_max_array=[]
+    flag_array.append('0')
     r_array.append(0)
     re_array.append(0)
     sb_array.append(0)
@@ -127,8 +136,6 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
     sbe_array=numpy.array(sbe_array)
 
     for i in open(param_file,'r'):
-        if re.match(r'^cm_per_pixel\s',i):
-            cm_per_pixel=float(i.split()[1])
         if re.match(r'^n01\s',i):
             model='dbeta'
             n01=float(i.split()[1])
@@ -184,18 +191,25 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
                 bkg_min=float(i.split()[2])
                 bkg_max=float(i.split()[3])
 
-    for i in open(sys.argv[3]):
+    for i in open(cfunc_file):
         r_cfunc_array.append(float(i.split()[0]))
         cfunc_ori_array.append(float(i.split()[1]))
+    for i in open(cfunc_cfile):
+        rc_cfunc_array.append(float(i.split()[0]))
+        cfunc_cori_array.append(float(i.split()[0]))
 
-    r_max=int(r_array[len(r_array)-1]+re_array[len(re_array)-1])
+#    r_max=int(r_array[len(r_array)-1]+re_array[len(re_array)-1])
 
-    for i in range(0,4900,10):
+    for i in rne_array:
         if i==0:
             continue
         for j in range(len(r_cfunc_array)):
             if r_cfunc_array[j]>i:
                 cfunc_use_array.append(cfunc_ori_array[j])
+                break
+        for j in range(len(rc_cfunc_array)):
+            if rc_cfunc_array[j]>i:
+                cfunc_cuse_array.append(cfunc_cori_array[j])
                 break
     if model=='beta':
         p0=[n0,beta,rc,bkg]
@@ -239,29 +253,33 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
             p_min_array[6]=bkg_min
             p_max_array[6]=bkg_max
 
-    r_use_array=[]
-    for i in range(0,4900,10):
-         r_use_array.append(i+5)
+#    r_use_array=[]
+#    for i in range(0,4900,10):
+#         r_use_array.append(i+5)
 
 #f=lambda par: likehood(*par)
-    result=minimize(likehood,p0,method='Powell')
+    result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,flag_array,model),method='Powell')
 
     adjust(result.x)
     print(result.x)
     init_pro=likehood(p0)
     final_pro=likehood(result.x)
     print(init_pro,final_pro)
-    plot_result(result.x)
-    if len(sys.argv)>4:
-        fi=open(sys.argv[4],'a')
-        print(result.x,file=fi)
-        fi.close()
-    if len(sys.argv)>5:
-        fi=open(sys.argv[5],'a')
-        print(sb_array,file=fi)
-        fi.close()
-    return 0
+#    plot_result(result.x)
+#    if len(sys.argv)>4:
+#        fi=open(sys.argv[4],'a')
+#        print(result.x,file=fi)
+#        fi.close()
+#    if len(sys.argv)>5:
+#        fi=open(sys.argv[5],'a')
+#        print(sb_array,file=fi)
+#        fi.close()
+#    return 0
 
 if __name__=='__main__':
-    main()
+    param_file=sys.argv[2]
+    sbp_data_file=sys.argv[1]
+    cfunc_file=sys.argv[3]
+    cfunc_cfile=sys.argv[4]
+    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile)
 
