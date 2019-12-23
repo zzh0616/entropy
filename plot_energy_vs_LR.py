@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 import json
+import analyze_db
 from astropy.cosmology import FlatLambdaCDM
 from calc_reff import reassign
 cosmo=FlatLambdaCDM(H0=71,Om0=0.27,Tcmb0=2.725)
@@ -70,8 +71,17 @@ plt.ylabel('total feedback energy (kev)')
 plt.savefig('T_vs_feedback.pdf')
 plt.clf()
 SUM_Efeed_array=[]
+SUM_Efeed_array_up=[]
+SUM_Efeed_array_down=[]
 SUM_CC_Efeed_array=[]
+SUM_CC_Efeed_array_up=[]
+SUM_CC_Efeed_array_down=[]
 SUM_NCC_Efeed_array=[]
+SUM_NCC_Efeed_array_up=[]
+SUM_NCC_Efeed_array_down=[]
+SUM_EICM_array=[]
+SUM_CC_EICM_array=[]
+SUM_NCC_EICM_array=[]
 i=0
 kc_cc_array=[]
 kc_ncc_array=[]
@@ -110,17 +120,26 @@ for f in open(sys.argv[1],'r'):
         n2=p[0][j]
         kori_array=a0*np.power(r_array,gamma0)+k0
         kfit=np.delete(kfit_array[j],0)
-        Efeed_array=n2*T_array[j]*(kfit-kori_array)/kfit
+        EICM_array=n2*T_array[j]*(kfit-kori_array)/kfit
 #        print(Efeed_array)
-        Efeed_new_array=reassign(r_new_array,r_array,Efeed_array)
-        SUM_Efeed_array.append(Efeed_new_array)
+        EICM_new_array=reassign(r_new_array,r_array,EICM_array)
+        SUM_EICM_array.append(EICM_new_array)
+        filename=f+'/'+'Efeed_scaled_array.npy'
+        [Efeed_array,Efeed_array_down,Efeed_array_up]=np.load(filename)
+        SUM_Efeed_array.append(Efeed_array)
+        SUM_Efeed_array_up.append(Efeed_array_up)
+        SUM_Efeed_array_down.append(Efeed_array_down)
         plt.semilogx(LR_array[i],Efeed_array[0],'+')
         if tcool_array[i]>7.7:
 #        plt.semilogx(r_scaled_array,Efeed_array/np.power(Tave_array[i],1),'r')
-            SUM_NCC_Efeed_array.append(Efeed_new_array)
+            SUM_NCC_Efeed_array.append(Efeed_array)
+            SUM_NCC_Efeed_array_up.append(Efeed_array_up)
+            SUM_NCC_Efeed_array_down.append(Efeed_array_down)
         else:
 #        plt.semilogx(r_scaled_array,Efeed_array/np.power(Tave_array[i],1),'b')
-            SUM_CC_Efeed_array.append(Efeed_new_array)
+            SUM_CC_Efeed_array.append(Efeed_array)
+            SUM_CC_Efeed_array_up.append(Efeed_array_up)
+            SUM_CC_Efeed_array_down.append(Efeed_array_down)
         break
     if tcool_array[i]<=7.7:
         LR_cc_array.append(LR_array[i])
@@ -140,30 +159,34 @@ plt.clf()
 csb_array=np.array(csb_array)
 csbe_array=np.array(csbe_array)
 SUM_Efeed_array=np.array(SUM_Efeed_array)
-SUM_Efeed_array.sort(0)
-Efeed_center=SUM_Efeed_array[int(len(SUM_Efeed_array)/2)]
-Efeed_up=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.84)]
-Efeed_down=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.16)]
+#SUM_Efeed_array.sort(0)
+#Efeed_center=SUM_Efeed_array[int(len(SUM_Efeed_array)/2)]
+#Efeed_up=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.84)]
+#Efeed_down=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.16)]
+[Efeed_center,Efeed_down,Efeed_up]=analyze_db.sum_error_calc(SUM_Efeed_array,SUM_Efeed_array_down,SUM_Efeed_array_up)
+print(Efeed_center)
 #plt.semilogx(r_scaled_array,Efeed_center)
 SUM_CC_Efeed_array=np.array(SUM_CC_Efeed_array)
-SUM_CC_Efeed_array.sort(0)
-Efeed_CC_center=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)/2)]
-Efeed_CC_up=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)*0.84)]
-Efeed_CC_down=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)*0.16)]
+#SUM_CC_Efeed_array.sort(0)
+#Efeed_CC_center=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)/2)]
+#Efeed_CC_up=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)*0.84)]
+#Efeed_CC_down=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)*0.16)]
+[Efeed_CC_center,Efeed_CC_down,Efeed_CC_up]=analyze_db.sum_error_calc(SUM_CC_Efeed_array,SUM_CC_Efeed_array_down,SUM_CC_Efeed_array_up)
 plt.semilogx(r_scaled_array,Efeed_CC_center,'b')
 SUM_NCC_Efeed_array=np.array(SUM_NCC_Efeed_array)
-SUM_NCC_Efeed_array.sort(0)
-Efeed_NCC_center=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)/2)]
-Efeed_NCC_up=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.84)]
-Efeed_NCC_down=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.16)]
-plt.semilogx(r_scaled_array,Efeed_NCC_center,'r')
-plt.xlim(0.01,2)
-plt.ylim(-3,7)
-plt.fill_between(r_scaled_array,Efeed_CC_down,Efeed_CC_up,color='blue',alpha=0.7)
-plt.fill_between(r_scaled_array,Efeed_NCC_down,Efeed_NCC_up,color='red',alpha=0.3)
+#SUM_NCC_Efeed_array.sort(0)
+#Efeed_NCC_center=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)/2)]
+#Efeed_NCC_up=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.84)]
+#Efeed_NCC_down=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.16)]
+[Efeed_NCC_center,Efeed_NCC_down,Efeed_NCC_up]=analyze_db.sum_error_calc(SUM_NCC_Efeed_array,SUM_NCC_Efeed_array_down,SUM_NCC_Efeed_array_up)
+plt.loglog(r_scaled_array,Efeed_NCC_center,'r')
+plt.xlim(0.03,2)
+plt.ylim(0.08,50)
+plt.fill_between(r_scaled_array,Efeed_CC_down,Efeed_CC_up+0.2,color='blue',alpha=0.7)
+plt.fill_between(r_scaled_array,Efeed_NCC_down,Efeed_NCC_up+0.2,color='red',alpha=0.3)
 plt.xlabel('Radius r/r200')
-plt.ylabel('feedback energy per particle without cooling (kev)')
-plt.savefig('Feedback_vs_Radius.pdf')
+plt.ylabel('feedback energy per particle (kev)')
+plt.savefig('Efeedback_vs_Radius.pdf')
 
 plt.clf()
 for i in range(len(Tave_array)):

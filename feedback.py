@@ -328,17 +328,25 @@ def main():
     plt.legend()
     plt.savefig(feedback_file)
     Efeed_scaled_array=[]
+    Efeed_scaled_array_up=[]
+    Efeed_scaled_array_down=[]
     scaled_array=np.arange(0.001,1.4,0.001)
     for i in range(len(scaled_array)):
         for j in range(len(r_array)):
             if scaled_array[i]*r200<r_array[j]:
                 Efeed=(feedback_array_center[j])
+                Efeedup=feedback_array_up[j]
+                Efeeddown=feedback_array_down[j]
                 Efeed_scaled_array.append(Efeed)
+                Efeed_scaled_array_up.append(Efeedup)
+                Efeed_scaled_array_down.append(Efeeddown)
                 break
             if j==len(r_array)-1:
-                Efeed_scaled_array.append(Efeedback_array[j])
-    Efeed_scaled_array=np.array(Efeed_scaled_array)
-    np.save('Efeed_scaled_array',Efeed_scaled_array)
+                Efeed_scaled_array.append(feedback_array_center[j])
+                Efeed_scaled_array_up.append(feedback_array_up[j])
+                Efeed_scaled_array_down.append(feedback_array_down[j])
+    Efeed_scaled_array_tot=np.array([Efeed_scaled_array,Efeed_scaled_array_down,Efeed_scaled_array_up])
+    np.save('Efeed_scaled_array',Efeed_scaled_array_tot)
 
 
 

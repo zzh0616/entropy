@@ -8,7 +8,7 @@
 
 import matplotlib.pyplot as plt
 import sys
-import plot_all_func
+import plot_all
 import matplotlib
 import numpy as np
 mode=sys.argv[1]
@@ -30,7 +30,10 @@ for f in open(sys.argv[2]):
         plt.setp([ax_this.get_yticklabels()],visible=False)
     if np.floor((index-1)/y) != x-1:
         plt.setp([ax_this.get_xticklabels()],visible=False)
-    plot_all_func.main(mode,f)
+    fi=open('_tmp.tmp','w')
+    print(f,end='',file=fi)
+    fi.close()
+    plot_all.main('3','_tmp.tmp')
     if mode=='1s':
         ax_this.set_xticks([10,100,1000])
         ax_this.set_xticklabels(['10','$10^2$','$10^3$'],fontsize=6)
@@ -45,17 +48,18 @@ for f in open(sys.argv[2]):
 #plt.setp([ax.get_yticklabels() for ax in axarr[:, 1:].reshape(-1)],visiable=False)
 if mode == '2':
     fig.text(0.45,0.08,r'Radius (${\rm r/r_{200}}$)')
-    fig.text(0.02,0.65,r'Entropy (${\rm k/k(0.3 r_{200})}$)',rotation=90)
+    fig.text(0.02,0.4,r'Entropy (${\rm K/K_{200}}$)',rotation=90)
     blue_line=matplotlib.lines.Line2D([],[])
     orange_line=matplotlib.lines.Line2D([],[],color='orange')
-    green_line=matplotlib.lines.Line2D([],[],color='green')
+    black_line=matplotlib.lines.Line2D([],[],color='k')
+    green_line=matplotlib.lines.Line2D([],[],color='green',linestyle='--',alpha=0.5)
     green_patch=matplotlib.patches.Patch(color='palegreen',alpha=1,lw=2)
 #    test=matplotlib.patches.Rectangle([0,0],1,1,color='green',lw=2,alpha=0.7)
     grey_patch=matplotlib.patches.Patch(color='grey',lw=2)
     z=np.random.randn(10)
     black_cross=matplotlib.lines.Line2D([],[],color='k',marker='+',markersize=5,markerfacecolor='k',linestyle='none')
-    plt.legend(handles=[(green_patch,green_line),black_cross,(grey_patch,blue_line),orange_line],labels=[r'our model ($C(r) \equiv 1 $)','data from the literature','our model','baseline entropy'],fontsize=6,loc='upper center',bbox_to_anchor=(-1.5,-0.25),ncol=5)
-    fig.savefig('entropy_compare_subfig.pdf')
+    plt.legend(handles=[(grey_patch,blue_line),black_line,green_line],labels=['fitted entropy profile','baseline entropy','outermost radius of FoV'],fontsize=6,loc='upper center',bbox_to_anchor=(-1.5,-0.6),ncol=6)
+    fig.savefig('entropy_subfig.pdf')
 if mode == '1t':
     fig.text(0.45,0.03,'Radius (kpc)')
     fig.text(0.02,0.62,'Temperature (keV)',rotation=90)

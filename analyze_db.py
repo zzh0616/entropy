@@ -140,6 +140,27 @@ def clumping_model(x,n1,n2,n3,n4,n5):
         if tmp[i] < 1 :
             tmp[i]=1
     return tmp
+def sum_error_calc(sum_center_array,sum_low_array,sum_up_array):
+    sum_center_array=np.array(sum_center_array)
+    sum_low_array=np.array(sum_low_array)
+    sum_up_array=np.array(sum_up_array)
+    if sum_center_array.shape != sum_low_array.shape or sum_center_array.shape != sum_up_array.shape:
+        print('error in sum_error_calc from analyze_db: please make sure input array are in the same radius, same length')
+        return -1
+    sum_err_up_array=sum_up_array-sum_center_array
+    err_up_array=np.sqrt(np.square(sum_err_up_array).sum(0))/len(sum_err_up_array)
+    err_low_array=np.sqrt(np.square(sum_center_array-sum_low_array).sum(0))/len(sum_center_array)
+    ind50=int(len(sum_center_array)*0.5)
+    ind84=int(len(sum_center_array)*0.84)
+    ind16=int(len(sum_center_array)*0.16)
+    inst_err_up_array=np.sort(sum_center_array,0)[ind84]-np.sort(sum_center_array,0)[ind50]
+    inst_err_low_array=np.sort(sum_center_array,0)[ind50]-np.sort(sum_center_array,0)[ind16]
+    center_array=np.sort(sum_center_array,0)[ind50]
+    low_array=center_array-inst_err_low_array-err_low_array
+    uo_array=center_array+inst_err_up_array+err_up_array
+#    low_array=center_array-np.sqrt(np.square(inst_err_low_array)+np.square(err_low_array))
+#    up_array=center_array+np.sqrt(np.square(inst_err_up_array)+np.square(err_up_array))
+    return [center_array,low_array,up_array]
 
 def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
     T0_0=0
