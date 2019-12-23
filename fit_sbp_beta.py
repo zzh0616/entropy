@@ -92,7 +92,7 @@ def plot_result(par):
     plt.savefig('sbp_fit.pdf',dpi=100)
     return 0
 
-def main(sbp_data_file,param_file,cfunc_file):
+def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
     r_array=[]
     re_array=[]
     sb_array=[]
@@ -100,6 +100,9 @@ def main(sbp_data_file,param_file,cfunc_file):
     cfunc_ori_array=[]
     r_cfunc_array=[]
     cfunc_use_array=[]
+    cfunc_cori_array=[]
+    rc_cfunc_array=[]
+    cfunc_cuse_array=[]
     p0=[]
     p_min_array=[]
     p_max_array=[]
@@ -110,18 +113,20 @@ def main(sbp_data_file,param_file,cfunc_file):
     cfunc_ori_array.append(0)
     r_cfunc_array.append(0)
     cfunc_use_array.append(0)
-    for i in open(sys.argv[1]):
+    flag_array=[]
+    for i in open(sbp_data_file):
         tmp=i.split()
         r_array.append(float(tmp[0]))
         re_array.append(float(tmp[1]))
         sb_array.append(float(tmp[2]))
         sbe_array.append(float(tmp[3]))
+        flag_array.append(tmp[4])
     r_array=numpy.array(r_array)
     re_array=numpy.array(re_array)
     sb_array=numpy.array(sb_array)
     sbe_array=numpy.array(sbe_array)
 
-    for i in open(sys.argv[2],'r'):
+    for i in open(param_file,'r'):
         if re.match(r'^cm_per_pixel\s',i):
             cm_per_pixel=float(i.split()[1])
         if re.match(r'^n01\s',i):

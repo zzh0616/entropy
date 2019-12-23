@@ -157,7 +157,7 @@ def sum_error_calc(sum_center_array,sum_low_array,sum_up_array):
     inst_err_low_array=np.sort(sum_center_array,0)[ind50]-np.sort(sum_center_array,0)[ind16]
     center_array=np.sort(sum_center_array,0)[ind50]
     low_array=center_array-inst_err_low_array-err_low_array
-    uo_array=center_array+inst_err_up_array+err_up_array
+    up_array=center_array+inst_err_up_array+err_up_array
 #    low_array=center_array-np.sqrt(np.square(inst_err_low_array)+np.square(err_low_array))
 #    up_array=center_array+np.sqrt(np.square(inst_err_up_array)+np.square(err_up_array))
     return [center_array,low_array,up_array]
