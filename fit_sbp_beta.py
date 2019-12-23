@@ -16,6 +16,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from zzh_model import gpob
 import deproject_model
+import json
 numpy.set_printoptions(linewidth=4900)
 def swap(a,b):
     return [b,a]
@@ -33,7 +34,7 @@ def adjust(par,p_min_array,p_max_array):
 #            [par[2],par[5]]=swap(par[2],par[5])
     return par
 
-def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array,cfunc_use_array,flag_array,model):
+def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model):
     pro=0
     par=adjust(par,p_min_array,p_max_array)
     den_array=[]
@@ -58,43 +59,41 @@ def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array
             sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_use_array)
             sb_m=sb_m+bkg
             pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
+        if flag_array[i]=='c':
+            sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_cuse_array)
+            pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
     return -pro
 
-def plot_result(par):
+def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array):
     plot_y=[]
+    plot_yc=[]
     den=[]
     den.append(0)
     plot_y.append(0)
+    plot_yc.append(0)
     if model=='beta':
         bkg=par[3]
         par_use=par[0:3]
-        for i in range(0,4900,10):
-            if i==0:
-                continue
-            den.append(deproject_model.beta(i,*par_use))
+        den=deproject_model.beta(rne_array,*par_use)
     if model=='dbeta':
         bkg=par[6]
-#        if par[1]<par[4]:
-#            par[1]=par[4]
         par_use=par[0:6]
-#        if par_use[2]>par_use[5]:
-#            [par_use[2],par_use[5]]=swap(par_use[2],par_use[5])
-        for i in range(0,4900,10):
-            if i==0:
-                continue
-            den.append(deproject_model.dbeta(i,*par_use))
-    for i in range(0,4900,10):
+        den=deproject_model.dbeta(rne_array,*par_use)
+    for i in rne_array:
         if i==0:
             continue
-        plot_y.append(deproject_model.calc_sb(i,r_use_array,den,cfunc_use_array)+bkg)
-    plt.loglog(range(0,4900,10),plot_y,'r-')
+        plot_y.append(deproject_model.calc_sb(i,rne_array,den,cfunc_use_array)+bkg)
+        plot_yc.append(deproject_model.calc_sb(i,rne_array,den,cfunc_cuse_array))
+    plt.loglog(rne_array,plot_y,'r-',label='data from others')
+    plt.loglog(rne_array,plot_yc,'b-',label='our chandra data')
+    plt.xlim(20,2000)
     plt.errorbar(r_array,sb_array,xerr=re_array,yerr=sbe_array,color='k',linestyle='none')
 #    print(den)
-    plt.savefig('sbp_fit.pdf',dpi=100)
-    return 0
+    plt.savefig('sbp_beta_fit.pdf',dpi=100)
+    return den
 
-def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
-    tmp1=list(range(1,11))
+def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
+    tmp1=list(range(0,11))
     tmp2=list(range(11,41,3))
     tmp3=list(range(41,3001,5))
     tmp1.extend(tmp2)
@@ -120,9 +119,9 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
     sb_array.append(0)
     sbe_array.append(0)
     cfunc_ori_array.append(0)
+    cfunc_cuse_array.append(0)
     r_cfunc_array.append(0)
     cfunc_use_array.append(0)
-    flag_array=[]
     for i in open(sbp_data_file):
         tmp=i.split()
         r_array.append(float(tmp[0]))
@@ -196,7 +195,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
         cfunc_ori_array.append(float(i.split()[1]))
     for i in open(cfunc_cfile):
         rc_cfunc_array.append(float(i.split()[0]))
-        cfunc_cori_array.append(float(i.split()[0]))
+        cfunc_cori_array.append(float(i.split()[1]))
 
 #    r_max=int(r_array[len(r_array)-1]+re_array[len(re_array)-1])
 
@@ -258,14 +257,15 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
 #         r_use_array.append(i+5)
 
 #f=lambda par: likehood(*par)
-    result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,flag_array,model),method='Powell')
 
-    adjust(result.x)
+    result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model),method='Powell')
+
+    adjust(result.x,p_min_array,p_max_array)
     print(result.x)
-    init_pro=likehood(p0)
-    final_pro=likehood(result.x)
+    init_pro=likehood(p0,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
+    final_pro=likehood(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
     print(init_pro,final_pro)
-#    plot_result(result.x)
+    ne_array=plot_result(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array)
 #    if len(sys.argv)>4:
 #        fi=open(sys.argv[4],'a')
 #        print(result.x,file=fi)
@@ -275,11 +275,25 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile):
 #        print(sb_array,file=fi)
 #        fi.close()
 #    return 0
+    fi=open(json_file)
+    dat=json.load(fi)
+    t_array=np.array(dat['temperature_model'][0],dtype=float)
+    t_array=np.insert(t_array,0,0)
+    k_array=t_array*np.power(ne_array,-2/3)
+    kori_array=np.array(dat['k_fit'][0],dtype=np.float)
+    kori_array=np.insert(kori_array,0,0)
+    plt.clf()
+    plt.loglog(rne_array,k_array,label='beta model fit')
+    plt.loglog(rne_array,kori_array,label='ori model')
+    plt.legend()
+    plt.xlim(10,2000)
+    plt.savefig('entropy_beta_compare.pdf')
 
 if __name__=='__main__':
     param_file=sys.argv[2]
     sbp_data_file=sys.argv[1]
     cfunc_file=sys.argv[3]
     cfunc_cfile=sys.argv[4]
-    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile)
+    json_file=sys.argv[5]
+    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file)
 
