@@ -341,6 +341,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
     plt.legend()
     plt.xlim(10,2000)
     plt.savefig('entropy_beta_compare.pdf')
+    np.save('beta_fit_result_all',p_all)
 
 if __name__=='__main__':
     param_file=sys.argv[2]
