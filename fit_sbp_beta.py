@@ -290,7 +290,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
             p_min_array[6]=bkg_min
             p_max_array[6]=bkg_max
     p_all=[]
-    for i in range(7):
+    for i in range(100):
         if i==0:
             sb_array_this=sb_array
         else:
