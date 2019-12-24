@@ -17,9 +17,19 @@ import matplotlib.pyplot as plt
 from zzh_model import gpob
 import deproject_model
 import json
+import random
 numpy.set_printoptions(linewidth=4900)
 def swap(a,b):
     return [b,a]
+
+def shuffle(a_array,err_array):
+    if len(a_array)!=len(err_array):
+        print('error from shuffle in fit_sbp_beta.py: please check the length of input arrays')
+        return -1
+    a_array=np.array(a_array)
+    err_array=np.array(err_array)
+    anew=random.gauss(a_array,err_array)
+    return anew
 
 def adjust(par,p_min_array,p_max_array):
     for i in range(len(par)):
@@ -65,32 +75,59 @@ def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array
     return -pro
 
 def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array):
-    plot_y=[]
-    plot_yc=[]
-    den=[]
-    den.append(0)
-    plot_y.append(0)
-    plot_yc.append(0)
-    if model=='beta':
-        bkg=par[3]
-        par_use=par[0:3]
-        den=deproject_model.beta(rne_array,*par_use)
-    if model=='dbeta':
-        bkg=par[6]
-        par_use=par[0:6]
-        den=deproject_model.dbeta(rne_array,*par_use)
-    for i in rne_array:
-        if i==0:
-            continue
-        plot_y.append(deproject_model.calc_sb(i,rne_array,den,cfunc_use_array)+bkg)
-        plot_yc.append(deproject_model.calc_sb(i,rne_array,den,cfunc_cuse_array))
-    plt.loglog(rne_array,plot_y,'r-',label='data from others')
-    plt.loglog(rne_array,plot_yc,'b-',label='our chandra data')
+    den_sum_array=[]
+    sbp_sum_array=[]
+    sbpc_sum_array=[]
+    par=np.array(par)
+    if len(par.shape) == 1:
+        print('waring: make sure it is a center only plot')
+        ind50=0
+        ind16=0
+        ind84=0
+    elif len(par.shape) == 2:
+        if len(par)< 6:
+            print('error from plot_result in fit_sbp_beta: need more monte-carlo times')
+            return -1
+        else:
+            ind50=int(len(par)*0.5)
+            ind16=int(len(par)*0.16)
+            ind84=int(len(par)*0.84)
+    for i in range(len(par)):
+        plot_y=[]
+        plot_yc=[]
+        den=[]
+        den.append(0)
+        plot_y.append(0)
+        plot_yc.append(0)
+        if model=='beta':
+            bkg=par[i][3]
+            par_use=par[i][0:3]
+            den=deproject_model.beta(rne_array,*par_use)
+        if model=='dbeta':
+            bkg=par[i][6]
+            par_use=par[i][0:6]
+            den=deproject_model.dbeta(rne_array,*par_use)
+        den_sum_array.append(den)
+        for i in rne_array:
+            if i==0:
+                continue
+            plot_y.append(deproject_model.calc_sb(i,rne_array,den,cfunc_use_array)+bkg)
+            plot_yc.append(deproject_model.calc_sb(i,rne_array,den,cfunc_cuse_array))
+        sbp_sum_array.append(plot_y)
+        sbpc_sum_array.append(plot_yc)
+    sbp_sum_array=np.sort(sbp_sum_array,0)
+    sbpc_sum_array=np.sort(sbpc_sum_array,0)
+    den_sum_array=np.sort(den_sum_array,0)
+    plt.loglog(rne_array,sbp_sum_array[ind50],'r-',lw=0.5,label='data from others')
+    plt.loglog(rne_array,sbpc_sum_array[ind50],'b-',lw=0.5,label='our chandra data')
     plt.xlim(20,2000)
     plt.errorbar(r_array,sb_array,xerr=re_array,yerr=sbe_array,color='k',linestyle='none')
 #    print(den)
+    plt.fill_between(rne_array,sbp_sum_array[ind16],sbp_sum_array[ind84],color='r',alpha=0.3)
+    plt.fill_between(rne_array,sbpc_sum_array[ind16],sbpc_sum_array[ind84],color='b',alpha=0.3)
+    plt.legend()
     plt.savefig('sbp_beta_fit.pdf',dpi=100)
-    return den
+    return [den_sum_array[ind50],den_sum_array[ind16],den_sum_array[ind84]]
 
 def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
     tmp1=list(range(0,11))
@@ -252,21 +289,20 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
         if 'bkg_min' in locals().keys():
             p_min_array[6]=bkg_min
             p_max_array[6]=bkg_max
-
-#    r_use_array=[]
-#    for i in range(0,4900,10):
-#         r_use_array.append(i+5)
-
-#f=lambda par: likehood(*par)
-
-    result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model),method='Powell')
-
-    adjust(result.x,p_min_array,p_max_array)
-    print(result.x)
-    init_pro=likehood(p0,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
-    final_pro=likehood(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
-    print(init_pro,final_pro)
-    ne_array=plot_result(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array)
+    p_all=[]
+    for i in range(7):
+        if i==0:
+            sb_array_this=sb_array
+        else:
+            sb_array_this=shuffle(sb_array,sbe_array)
+        result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array_this,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model),method='Powell')
+        adjust(result.x,p_min_array,p_max_array)
+        print(result.x)
+        init_pro=likehood(p0,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
+        final_pro=likehood(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
+        print(init_pro,final_pro)
+        p_all.append(result.x)
+    sum_ne_array=plot_result(p_all,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array)
 #    if len(sys.argv)>4:
 #        fi=open(sys.argv[4],'a')
 #        print(result.x,file=fi)
@@ -280,12 +316,28 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
     dat=json.load(fi)
     t_array=np.array(dat['temperature_model'][0],dtype=float)
     t_array=np.insert(t_array,0,0)
+    t_array_up=np.array(dat['temperature_model'][2],dtype=np.float)
+    t_array_down=np.array(dat['temperature_model'][1],dtype=np.float)
+    t_array_up=np.insert(t_array_up,0,0)
+    t_array_down=np.insert(t_array_down,0,0)
+    ne_array=sum_ne_array[0]
+    ne_array_down=sum_ne_array[1]
+    ne_array_up=sum_ne_array[2]
+    te_array=(t_array_up-t_array_down)/2/t_array
+    nee_array=(ne_array_up-ne_array_down)/2/ne_array
     k_array=t_array*np.power(ne_array,-2/3)
+    ke_array=np.sqrt(np.square(te_array)+np.square(nee_array))*k_array
     kori_array=np.array(dat['k_fit'][0],dtype=np.float)
     kori_array=np.insert(kori_array,0,0)
+    kori_array_up=np.array(dat['k_fit'][2],dtype=np.float)
+    kori_array_down=np.array(dat['k_fit'][1],dtype=np.float)
+    kori_array_down=np.insert(kori_array_down,0,0)
+    kori_array_up=np.insert(kori_array_up,0,0)
     plt.clf()
     plt.loglog(rne_array,k_array,label='beta model fit')
+    plt.fill_between(rne_array,k_array-ke_array,k_array+ke_array,alpha=0.3)
     plt.loglog(rne_array,kori_array,label='ori model')
+    plt.fill_between(rne_array,kori_array_down,kori_array_up,alpha=0.3)
     plt.legend()
     plt.xlim(10,2000)
     plt.savefig('entropy_beta_compare.pdf')
