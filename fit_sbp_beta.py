@@ -133,6 +133,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
     re_array=numpy.array(re_array)
     sb_array=numpy.array(sb_array)
     sbe_array=numpy.array(sbe_array)
+    sbe_array=sbe_array+sb_array*0.1
 
     for i in open(param_file,'r'):
         if re.match(r'^n01\s',i):

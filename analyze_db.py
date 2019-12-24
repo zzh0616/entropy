@@ -356,6 +356,8 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
         for j in range(len(ne_cl_array)):
             if ne_cl_array[j]<ne_array[j]:
                 ne_cl_array[j]=ne_array[j]
+        k_array_fitted=entropy_model(T_array,ne_array)
+        SUM_kfit_array.append(k_array_fitted)
         ne_cl_array=numpy.insert(ne_cl_array,0,0.0)
         SUM_ne_cl_array.append(ne_cl_array)
         ne_array=numpy.insert(ne_array,0,0.0)
@@ -374,8 +376,6 @@ def main(t_total,name,flag_out=False,out_array='k',flag_print=True):
         SUM_sbp_fit.append(sbp_fit)
         SUM_Tproj_array.append(t2d_array)
         SUM_csbp_fit.append(csbp_fit)
-        k_array_fitted=entropy_model(T_array,ne_array)
-        SUM_kfit_array.append(k_array_fitted)
     IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
     IND_16=numpy.int(numpy.round((aa-bb)/cc*0.16))
     IND_50=numpy.int(numpy.round((aa-bb)/cc*0.5))

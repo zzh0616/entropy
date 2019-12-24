@@ -753,6 +753,7 @@ for i in range(len(ne0_f)):
     mass_array=calc_mass(rne_array,T_array,ne_array,p_nth)
     SUM_mass_array.append(mass_array)
     nfw_fitted_array=[]
+    k_array_fitted=T_array*np.power(ne_array,-2/3)
     for j in range(len(rne_array)):
         nfw_fitted=Modefied_Mnfw(rne_array[j],[rho_f[i],rs_f[i],delta_f[i],delta2_f[i]])
         nfw_fitted_array.append(nfw_fitted)
@@ -779,7 +780,6 @@ for i in range(len(ne0_f)):
     SUM_sbp_fit.append(sbp_fit)
     SUM_Tproj_array.append(t2d_array)
     SUM_csbp_fit.append(csbp_fit)
-    k_array_fitted=T_array*np.power(ne_array,-2/3)
 #    k_array_fitted=entropy_model(rne_array,kmod_a_f[i],kmod_b_f[i],kmod_c_f[i],kmod_k0_f[i])
     SUM_kfit_array.append(k_array_fitted)
 IND_10=numpy.int(numpy.round((aa-bb)/cc*0.1))
