@@ -32,7 +32,7 @@ pi=3.1415926
 T0_0=0
 def reassign(rout_array,rin_array,yin_array):
     if len(rin_array) != len(yin_array):
-        print('warning: please check input of reassign')
+        print('error: please check input of reassign')
         return 0
     yout_array=[]
     for i in range(len(rout_array)):
@@ -42,9 +42,6 @@ def reassign(rout_array,rin_array,yin_array):
             yout=yin_array[-1]
         else:
             for j in range(len(rin_array)):
-                if j==len(rin_array)-1:
-                    print('warning: please check the result of the function reassign')
-                    return -1
                 if rout_array[i]<rin_array[j]:
                     yout=lintp(rout_array[i],rin_array[j-1],rin_array[j],yin_array[j-1],yin_array[j])
                     break

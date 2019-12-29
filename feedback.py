@@ -9,7 +9,66 @@ from matplotlib import pyplot as plt
 import analyze_db
 import calc_csb
 import calc_reff
-from modnfw_readarray import mod_nfw,calc
+from modnfw_readarray import mod_nfw,calc,lintp
+from astropy.cosmology import FlatLambdaCDM
+from astropy.cosmology import z_at_value
+import astropy.units as u
+cosmo=FlatLambdaCDM(H0=71,Om0=0.27,Tcmb0=2.725)
+
+def mz(t,a0,a1,a2):
+    ttot=cosmo.age(0).value
+    m=a0*np.power(t,a1-a2*np.log(t/ttot)) #10^14 Msun
+    return m
+def lm(x,t,a0,a2):
+    z=z_at_value(cosmo.age,t*u.Gyr)
+    ez=cosmo.efunc(z)
+    return(a0+7/3*np.log10(ez)+a2*np.log10(x/1e14))
+def calc_teff(m500,z):
+    tnow=cosmo.age(z).value
+    tfin=cosmo.age(3).value
+    pm1=[0.06265,1.94,0.55]
+    pm2=[0.05633,1.10,0.88]
+    pm3=[0.01876,0.64,0.96]
+    mref1=mz(tnow,*pm1)
+    mref2=mz(tnow,*pm2)
+    mref3=mz(tnow,*pm3)
+    if m500>np.sqrt(mref1*mref2):
+        pm_use=pm1
+    elif m500>np.sqrt(mref2*mref3):
+        pm_use=pm2
+    else:
+        pm_use=pm3
+    mnorm=m500/mz(tnow,*pm_use)
+    t_cp=[cosmo.age(0.0).value,cosmo.age(0.25).value,cosmo.age(0.5).value,cosmo.age(0.6).value,cosmo.age(0.8).value,cosmo.age(1.0).value,cosmo.age(1.5).value,cosmo.age(2.0).value]
+    pl_tot=[[0.294,1.345],[0.332,1.320],[0.359,1.312],[0.348,1.380],[0.400,1.375],[0.388,1.526],[0.370,1.360],[0.434,1.509]]
+    time_array=np.linspace(tnow,tfin,200)
+    dt=time_array[0]-time_array[1]
+    teff=0
+    pl_tot=np.array(pl_tot)
+    for i in range(len(time_array)):
+        if time_array[i]>t_cp[1]:
+            pl_use=lintp(time_array[i],t_cp[1],t_cp[0],pl_tot[1],pl_tot[0])
+        elif time_array[i]>t_cp[2]:
+            pl_use=lintp(time_array[i],t_cp[2],t_cp[1],pl_tot[2],pl_tot[1])
+        elif time_array[i]>t_cp[3]:
+            pl_use=lintp(time_array[i],t_cp[3],t_cp[2],pl_tot[3],pl_tot[2])
+        elif time_array[i]>t_cp[4]:
+            pl_use=lintp(time_array[i],t_cp[4],t_cp[3],pl_tot[4],pl_tot[3])
+        elif time_array[i]>t_cp[5]:
+            pl_use=lintp(time_array[i],t_cp[5],t_cp[4],pl_tot[5],pl_tot[4])
+        elif time_array[i]>t_cp[6]:
+            pl_use=lintp(time_array[i],t_cp[6],t_cp[5],pl_tot[6],pl_tot[5])
+        elif time_array[i]>t_cp[7]:
+            pl_use=lintp(time_array[i],t_cp[7],t_cp[6],pl_tot[7],pl_tot[6])
+        else:
+            pl_use=pl_tot[7]
+        m_this=mnorm*mz(time_array[i],*pm_use)
+        l_this=lm(m_this,time_array[i],*pl_use)
+        l_this=np.power(10,l_this)
+        if i==0:
+            l_norm=l_this
+        teff=teff+l_this/l_norm*dt
+    return teff
 # calculate the value (in kpc) of the r_delta(delta=200,etc.)
 def critical_radius(od,p_Mnfw,z,t_total):
     Ez=(0.27*np.power(1+z,3)+0.73)**0.5
@@ -123,6 +182,7 @@ def main():
     ind_84=int(len(p[0])*0.84)
     ind_16=int(len(p[0])*0.16)
     sum_Efeed=[]
+    sum_dq=[]
     sum_r200_array=[]
     sum_r500_array=[]
     sum_m200_array=[]
@@ -142,6 +202,7 @@ def main():
     sum_csb_array=[]
     sum_tcool_array=[]
     for i in range(len(p[0])):
+        print(name,i)
         lx_array=[]
         EL_array=[]
         a0=p[2][i]
@@ -172,13 +233,14 @@ def main():
         flag_r500=0
         lx200=-1
         lx500=-1
+        teff=calc_teff(m500,z)
         for j in range(len(r_array)):
             if j == 0:
                 V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
             else:
                 V_this=4/3*pi*(r_array[j]**3-r_array[j-1]**3)*kpc_per_cm**3
             lx_this=ne_cl_array[j]**2/1.2*V_this*cfunc_lx_use_array[j]*4*pi*dm*dm
-            E_loss=lx_this*5*Gyr*erg_to_kev/(ne_array[j]*V_this*1.93)
+            E_loss=lx_this*teff*Gyr*erg_to_kev/(ne_array[j]*V_this*1.93)
             lx_array.append(lx_this)
             EL_array.append(E_loss)
             if flag_r500==0:
@@ -196,16 +258,19 @@ def main():
         sum_lx200_array.append(lx200)
         sum_lx500_array.append(lx500)
         Efeed_tot=0
+        dq_tot=0
         num_tot=0
         for j in range(len(r_array)):
-            if r_array[j]<= 0.66*r200 and r_array[j]>=0.13*r200:
+            if r_array[j]<= r500 and r_array[j]>=0.00*r200:
                 if j==0:
                     V_this=4/3*pi*r_array[0]**3*kpc_per_cm**3
                 else:
                     V_this=4/3*pi*(r_array[j]**3-r_array[j-1]**3)*kpc_per_cm**3
                 Efeed_tot=Efeed_tot+Efeedback_array[j]*ne_array[j]*V_this*1.93
+                dq_tot=dq_tot+dq_array[j]*ne_array[j]*V_this*1.93
                 num_tot=num_tot+ne_array[j]*V_this*1.93
         sum_Efeed.append(Efeed_tot)
+        sum_dq.append(dq_tot)
         sum_num_tot.append(num_tot)
         flag_r200=0
         flag_r500=0
@@ -261,6 +326,7 @@ def main():
     out_file=name+'_suminfo.txt'
     fi=open(out_file,'w')
     sum_Efeed=np.sort(sum_Efeed)
+    sum_dq=np.sort(sum_dq)
     sum_num_tot=np.sort(sum_num_tot)
     sum_r200_array=np.sort(sum_r200_array)
     sum_r500_array=np.sort(sum_r500_array)
@@ -292,8 +358,9 @@ def main():
     print('fg500:',sum_fg500_array[ind_50],sum_fg500_array[ind_16],sum_fg500_array[ind_84],file=fi)
     print('k200:',sum_k200_array[ind_50],sum_k200_array[ind_16],sum_k200_array[ind_84],file=fi)
     print('Tave(0.2-0.5r500):',sum_Tave_array[ind_50],sum_Tave_array[ind_16],sum_Tave_array[ind_84],file=fi)
-    print('Efeed(0.2-1r500):',sum_Efeed[ind_50],sum_Efeed[ind_16],sum_Efeed[ind_84],file=fi)
-    print('gnum(0.2-1r500):',sum_num_tot[ind_50],sum_num_tot[ind_16],sum_num_tot[ind_84],file=fi)
+    print('Efeed(0-1r500):',sum_Efeed[ind_50],sum_Efeed[ind_16],sum_Efeed[ind_84],file=fi)
+    print('gnum(0-1r500):',sum_num_tot[ind_50],sum_num_tot[ind_16],sum_num_tot[ind_84],file=fi)
+    print('dq(0-1r500):',sum_dq[ind_50],sum_dq[ind_16],sum_dq[ind_84],file=fi)
     print('m3000k:',sum_m3000k_array[ind_50],sum_m3000k_array[ind_16],sum_m3000k_array[ind_84],file=fi)
     print('gm3000k:',sum_gm3000k_array[ind_50],sum_gm3000k_array[ind_16],sum_gm3000k_array[ind_84],file=fi)
     print('fg3000k:',sum_fg3000k_array[ind_50],sum_fg3000k_array[ind_16],sum_fg3000k_array[ind_84],file=fi)
@@ -346,8 +413,15 @@ def main():
                 Efeed_scaled_array_up.append(feedback_array_up[j])
                 Efeed_scaled_array_down.append(feedback_array_down[j])
     Efeed_scaled_array_tot=np.array([Efeed_scaled_array,Efeed_scaled_array_down,Efeed_scaled_array_up])
+    rnew_array=scaled_array*r200
+    sum_dq_scaled_array=[]
+    for i in range(len(sum_dq_array)):
+        dq_scaled_array_this=calc_reff.reassign(rnew_array,r_array,sum_dq_array[i])
+        sum_dq_scaled_array.append(dq_scaled_array_this)
+    sum_dq_scaled_array=np.sort(sum_dq_scaled_array,0)
+    dq_scaled_array_tot=np.array([sum_dq_scaled_array[ind_50],sum_dq_scaled_array[ind_16],sum_dq_scaled_array[ind_84]])
     np.save('Efeed_scaled_array',Efeed_scaled_array_tot)
-
+    np.save('dq_scaled_array',dq_scaled_array_tot)
 
 
 if __name__ == "__main__":

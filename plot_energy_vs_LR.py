@@ -18,6 +18,7 @@ numtot_array=[]
 csb_array=[]
 csbe_array=[]
 tcool_array=[]
+m200_array=[]
 for f in open(sys.argv[1],'r'):
     f=f[0:-1]
     filename=f+'/'+f+'_result.csv'
@@ -37,9 +38,12 @@ for f in open(sys.argv[1],'r'):
             csbe=(np.float(i.split()[3])-np.float(i.split()[2]))/2
         if re.match(r'^tcool',i):
             tcool=(np.float(i.split()[1]))
+        if re.match(r'^m200',i):
+            m200=np.float(i.split()[1])
     tcool_array.append(tcool)
     csb_array.append(csb)
     csbe_array.append(csbe)
+    m200_array.append(m200)
     filename=f+'/'+f+'_L1.4G.txt'
     for i in open(filename,'r'):
         LR=np.float(i)
@@ -69,6 +73,11 @@ plt.loglog(Tave_array,energy_array,'+')
 plt.xlabel('average temperature(kev)')
 plt.ylabel('total feedback energy (kev)')
 plt.savefig('T_vs_feedback.pdf')
+plt.clf()
+plt.loglog(m200_array,energy_array,'+')
+plt.xlabel('m200 (Msun)')
+plt.ylabel('feedback energy (keV)')
+plt.savefig('m200_vs_feedback.pdf')
 plt.clf()
 SUM_Efeed_array=[]
 SUM_Efeed_array_up=[]
