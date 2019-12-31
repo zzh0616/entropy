@@ -13,12 +13,20 @@ kpc=3.086e19 #m
 pi=3.1415926
 LR_array=[]
 energy_array=[]
+energy_down_array=[]
+energy_up_array=[]
 Tave_array=[]
 numtot_array=[]
 csb_array=[]
 csbe_array=[]
+dist_array=[]
+diste_array=[]
 tcool_array=[]
-m200_array=[]
+m500_array=[]
+m500_down_array=[]
+m500_up_array=[]
+flag_uplimit_array=[]
+flag_upper=0
 for f in open(sys.argv[1],'r'):
     f=f[0:-1]
     filename=f+'/'+f+'_result.csv'
@@ -29,6 +37,12 @@ for f in open(sys.argv[1],'r'):
     for i in open(filename,'r'):
         if re.match(r'^Efeed',i):
             energy=np.float(i.split()[1])
+            energy_down=energy-np.float(i.split()[2])
+            if energy_down > energy*0.9:
+                flag_upper=1
+            else:
+                flag_upper=0
+            energy_up=np.float(i.split()[3])-energy
         if re.match(r'^Tave',i):
             T_ave=np.float(i.split()[1])
         if re.match(r'^r200',i):
@@ -38,12 +52,23 @@ for f in open(sys.argv[1],'r'):
             csbe=(np.float(i.split()[3])-np.float(i.split()[2]))/2
         if re.match(r'^tcool',i):
             tcool=(np.float(i.split()[1]))
-        if re.match(r'^m200',i):
-            m200=np.float(i.split()[1])
+        if re.match(r'^m500',i):
+            m500=np.float(i.split()[1])
+            m500_down=m500-np.float(i.split()[2])
+            m500_up=np.float(i.split()[3])-m500
+    filename=f+'/bcg_dist.txt'
+    fi=open(filename)
+    dist=float(fi.read()[0:-1])
+    fi.close()
+    flag_uplimit_array.append(flag_upper)
     tcool_array.append(tcool)
     csb_array.append(csb)
     csbe_array.append(csbe)
-    m200_array.append(m200)
+    dist_array.append(dist)
+    diste_array.append(dist*0.1)
+    m500_array.append(m500)
+    m500_down_array.append(m500_down)
+    m500_up_array.append(m500_up)
     filename=f+'/'+f+'_L1.4G.txt'
     for i in open(filename,'r'):
         LR=np.float(i)
@@ -58,6 +83,8 @@ for f in open(sys.argv[1],'r'):
     numtot_array.append(numtot)
     LR_array.append(LR)
     energy_array.append(energy/np.power(T_ave,0.0))
+    energy_down_array.append(energy_down)
+    energy_up_array.append(energy_up)
     Tave_array.append(T_ave)
 Tave_array=np.array(Tave_array)
 numtot_array=np.array(numtot_array)
@@ -74,10 +101,26 @@ plt.xlabel('average temperature(kev)')
 plt.ylabel('total feedback energy (kev)')
 plt.savefig('T_vs_feedback.pdf')
 plt.clf()
-plt.loglog(m200_array,energy_array,'+')
-plt.xlabel('m200 (Msun)')
+for i in range(len(m500_array)):
+    if flag_uplimit_array[i]==0:
+#        print(m500_array[i],energy_array[i],m500_down_array[i],m500_up_array[i],energy_down_array[i],energy_up_array[i])
+        plt.errorbar(m500_array[i],energy_array[i],xerr=[[m500_down_array[i]],[m500_up_array[i]]],yerr=[[energy_down_array[i]],[energy_up_array[i]]],linestyle='none',color='royalblue')
+        plt.loglog(m500_array[i],energy_array[i],'*',color='gold')
+    else:
+        plt.errorbar(m500_array[i],energy_up_array[i],xerr=[[m500_down_array[i]],[m500_up_array[i]]],yerr=[[energy_up_array[i]*0.3],[energy_up_array[i]]],uplims=True,color='royalblue')
+plt.ylim(1e68,2e72)
+m500_ref_array=np.linspace(1,100,1000)#*1e13
+mbh=1e9*np.power(10,-1.08+1.24*np.log10(m500_ref_array))
+#mbh=np.power(10,-9.56+1.39*np.log10(m500_ref_array))
+eta=0.02
+feedsl=mbh*eta*3e8*3e8*2e30/1.6e-16
+plt.loglog(m500_ref_array*1e13,feedsl,'k',label='eta=0.02')
+plt.loglog(m500_ref_array*1e13,feedsl*np.power(10,0.99),'k--',lw=0.5)
+plt.loglog(m500_ref_array*1e13,feedsl/np.power(10,0.99),'k--',lw=0.5)
+plt.legend()
+plt.xlabel('m500 (Msun)')
 plt.ylabel('feedback energy (keV)')
-plt.savefig('m200_vs_feedback.pdf')
+plt.savefig('m500_vs_feedback.pdf')
 plt.clf()
 SUM_Efeed_array=[]
 SUM_Efeed_array_up=[]
@@ -173,7 +216,7 @@ SUM_Efeed_array=np.array(SUM_Efeed_array)
 #Efeed_up=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.84)]
 #Efeed_down=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.16)]
 [Efeed_center,Efeed_down,Efeed_up]=analyze_db.sum_error_calc(SUM_Efeed_array,SUM_Efeed_array_down,SUM_Efeed_array_up)
-print(Efeed_center)
+#print(Efeed_center)
 #plt.semilogx(r_scaled_array,Efeed_center)
 SUM_CC_Efeed_array=np.array(SUM_CC_Efeed_array)
 #SUM_CC_Efeed_array.sort(0)
@@ -216,14 +259,14 @@ for i in range(len(Tave_array)):
                 f_array[0]=1
             else:
                 plt.loglog(kc_array[i],csb_array[i],'r*',markersize=8)
-            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='r')
+#            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='r')
         else:
             if f_array[1]==0:
                 plt.loglog(kc_array[i],csb_array[i],'r+',label='NCC, normal',markersize=8)
                 f_array[1]=1
             else:
                 plt.loglog(kc_array[i],csb_array[i],'r+',markersize=8)
-            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='r')
+#            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='r')
     else:
         if LR_array[i]>1e24:
             if f_array[2]==0:
@@ -231,18 +274,26 @@ for i in range(len(Tave_array)):
                 f_array[2]=1
             else:
                 plt.loglog(kc_array[i],csb_array[i],'b*',markersize=8)
-            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='b')
+#            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='b')
         else:
             if f_array[3]==0:
                 plt.loglog(kc_array[i],csb_array[i],'b+',label='CC, normal',markersize=8)
                 f_array[3]=1
             else:
                 plt.loglog(kc_array[i],csb_array[i],'b+',markersize=8)
-            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='b')
+#            plt.errorbar(kc_array[i],csb_array[i],xerr=sum_kce_array[i],yerr=csbe_array[i],color='b')
 plt.xlabel('central entropy (kev cm^2)')
 plt.ylabel('S ( < 40 kpc)/S ( < 400 kpc)')
 plt.legend()
 plt.savefig('kc_vs_csb.pdf')
+plt.clf()
+
+plt.loglog(kc_array,dist_array,'+')
+plt.xlabel('central entropy (kev cm^2)')
+plt.ylabel('distance between bcg and cluster X-ray center (Mpc)')
+plt.ylim(0.001,1)
+#plt.xlim(10,500)
+plt.savefig('kc_vs_dist.pdf')
 plt.clf()
 for f in open(sys.argv[1],'r'):
     f=f[0:-1]
