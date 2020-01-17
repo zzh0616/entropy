@@ -14,7 +14,7 @@ import numpy as np
 mode=sys.argv[1]
 x=int(sys.argv[3])
 y=int(sys.argv[4])
-if x*y != len(open(sys.argv[2]).readlines()):
+if x*y < len(open(sys.argv[2]).readlines()):
     print('lines not match, please check')
     exit
 matplotlib.rcParams['xtick.direction']='in'
@@ -22,18 +22,26 @@ fig, axarr=plt.subplots(x,y,sharex='all',sharey='all')
 
 fig.subplots_adjust(hspace=0,wspace=0,bottom=0.15,top=None)
 index=0
+nums=len(sys.argv[2])
 for f in open(sys.argv[2]):
     index=index+1
 #    if mode=='2':
     ax_this=plt.subplot(x,y,index)
     if np.mod(index-1,y) != 0:
         plt.setp([ax_this.get_yticklabels()],visible=False)
-    if np.floor((index-1)/y) != x-1:
+    if index+y<nums:
         plt.setp([ax_this.get_xticklabels()],visible=False)
-    fi=open('_tmp.tmp','w')
-    print(f,end='',file=fi)
-    fi.close()
-    plot_all.main('3','_tmp.tmp')
+    if mode=="2":
+        fi=open('_tmp.tmp','w')
+        print(f,end='',file=fi)
+        fi.close()
+        plot_all.main('3','_tmp.tmp')
+        ax_this.set_xticks([0.08,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,2.0],minor=True)
+        ax_this.set_xticks([0.1,1.0])
+        ax_this.set_yticks([0.07,0.08,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,2.0,3.0],minor=True)
+        ax_this.set_yticks([0.1,1.0])
+        ax_this.set_xticklabels(['0.1','1.0'],fontsize=6)
+        ax_this.set_yticklabels(['0.1','1.0'],fontsize=6)
     if mode=='1s':
         ax_this.set_xticks([10,100,1000])
         ax_this.set_xticklabels(['10','$10^2$','$10^3$'],fontsize=6)
@@ -42,13 +50,18 @@ for f in open(sys.argv[2]):
         ax_this.set_yscale("log")
         ax_this.set_xticks([10,100,1000])
         ax_this.set_xticklabels(['10','$10^2$','$10^3$'],fontsize=6)
+diff=x*y-len(open(sys.argv[2],'r').readlines())
+if diff>0:
+    for i in range(diff):
+        axarr[-1,-1-i].axis('off')
+#        plt.setp([ax_this.get_xlabels()],visible=False)
 
 #        plt.xticklabels=None
 #plt.setp([ax.get_xticklabels() for ax in axarr[:-1,:].reshape(-1)],visiable=False)
 #plt.setp([ax.get_yticklabels() for ax in axarr[:, 1:].reshape(-1)],visiable=False)
 if mode == '2':
     fig.text(0.45,0.08,r'Radius (${\rm r/r_{200}}$)')
-    fig.text(0.02,0.4,r'Entropy (${\rm K/K_{200}}$)',rotation=90)
+    fig.text(0.02,0.4,r'Entropy (${\rm K/K(r_{500})}$)',rotation=90)
     blue_line=matplotlib.lines.Line2D([],[])
     orange_line=matplotlib.lines.Line2D([],[],color='orange')
     black_line=matplotlib.lines.Line2D([],[],color='k')
@@ -58,7 +71,7 @@ if mode == '2':
     grey_patch=matplotlib.patches.Patch(color='grey',lw=2)
     z=np.random.randn(10)
     black_cross=matplotlib.lines.Line2D([],[],color='k',marker='+',markersize=5,markerfacecolor='k',linestyle='none')
-    plt.legend(handles=[(grey_patch,blue_line),black_line,green_line],labels=['fitted entropy profile','baseline entropy','outermost radius of FoV'],fontsize=6,loc='upper center',bbox_to_anchor=(-1.5,-0.6),ncol=6)
+    plt.legend(handles=[(grey_patch,blue_line),black_line,green_line],labels=['fitted entropy profile','baseline entropy','outermost radius of FoV'],fontsize=6,loc='upper center',bbox_to_anchor=(-1.5+diff,-0.6),ncol=6)
     fig.savefig('entropy_subfig.pdf')
 if mode == '1t':
     fig.text(0.45,0.03,'Radius (kpc)')

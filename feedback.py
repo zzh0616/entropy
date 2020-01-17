@@ -317,6 +317,9 @@ def main():
                         count=count+1
                     else:
                         flag2=1
+        if count==0:
+            print('waring while calculating T_ave in feedback.py: count of bins within 0.2-0.5r500 is 0')
+            count=1
         Tave=t_tmp/count
         sum_Tave_array.append(Tave)
         csb,tcool=calc_csb.main(name=name,iput='yes',t_array=T_array,sbp_array=sbp_array,ne_array=ne_array,sbp_c=sbp_c,r500=r500)
