@@ -524,6 +524,10 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
         lhood=lhood+gpob(fg,0.16,0.01)
     else:
         lhood=lhood+gpob(0.17,0.16,0.01)
+    if fg<0.10:
+        lhood=lhood+gpob(fg,0.10,0.01)
+    else:
+        lhood=lhood+gpob(0.10,0.10,0.01)
     y0=[ne0]
     p=[N1_0,n2,rs,a0,gamma0,k0,n3,rho,nth_a,nth_b,nth_gamma,delta,delta2,c4,tau,fg,s]
     flag_print=0
