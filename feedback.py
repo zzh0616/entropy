@@ -288,6 +288,9 @@ def main():
                 if r_array[j]>r200:
                     gmas200=gmas
                     flag_r200=1
+        if r200>r_array[j]:
+            gmas200=gmas
+            print(r200)
         sum_gm3000k_array.append(gmas)
         fg200=gmas200/m200
         fg500=gmas500/m500
