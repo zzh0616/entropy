@@ -369,6 +369,8 @@ for i in open(sys.argv[2],'r'):
         FG_0=float(i.split()[1])
         FG_ERR=float(i.split()[2])
         FG_MIN=float(i.split()[3])
+        if FG_MIN <=0.05:
+            FG_MIN=0.05
         FG_MAX=float(i.split()[4])
     elif re.match(r'^s\s',i):
         S_0=float(i.split()[1])
@@ -521,13 +523,13 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
     else:
         lhood=lhood+gpob(np.log(RHO_0),np.log(RHO_0),1)
     if fg>0.17:
-        lhood=lhood+gpob(fg,0.16,0.01)
+        lhood=lhood+gpob(fg,0.16,0.007)
     else:
-        lhood=lhood+gpob(0.17,0.16,0.01)
+        lhood=lhood+gpob(0.17,0.16,0.007)
     if fg<0.10:
-        lhood=lhood+gpob(fg,0.10,0.01)
+        lhood=lhood+gpob(fg,0.10,0.007)
     else:
-        lhood=lhood+gpob(0.10,0.10,0.01)
+        lhood=lhood+gpob(0.10,0.10,0.007)
     y0=[ne0]
     p=[N1_0,n2,rs,a0,gamma0,k0,n3,rho,nth_a,nth_b,nth_gamma,delta,delta2,c4,tau,fg,s]
     flag_print=0
@@ -609,11 +611,11 @@ def temp_ne2(n2=n2,rs=rs,a0=a0,gamma0=gamma0,delta=delta,k0=k0,n3=n3,\
                 if rmass_array[i]>=50:
                     lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*1*MASS_FACTOR
                 elif rmass_array[i]>=10:
-                    lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.75*MASS_FACTOR
+                    lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.95*MASS_FACTOR
             elif rmass_array[i]>R200_0:
-                lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.5*MASS_FACTOR
+                lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.95*MASS_FACTOR
             elif rmass_array[i]>R200_0/1.5:
-                lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.75*MASS_FACTOR
+                lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*0.95*MASS_FACTOR
             else:
                 lhood=lhood+gpob(Mnfw_model,M_this,M_this_err)*1.0*MASS_FACTOR
     for i in range(len(r_array)):
