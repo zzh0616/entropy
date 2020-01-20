@@ -283,7 +283,7 @@ for i in open(sys.argv[2],'r'):
             N3_C=1.3
             N3_MIN=float(i.split()[2])
             N3_MAX=float(i.split()[3])
-            N3_ERR=0.5
+            N3_ERR=1.5
         elif len(i.split())==5:
             N3_C=1.2
             N3_0=float(i.split()[1])
