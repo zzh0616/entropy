@@ -11,9 +11,9 @@ ABUND=`cat global.cfg | grep ^abund | awk '{print $2}'`
 NH=`cat global.cfg | grep ^nh | awk '{print $2}'`
 NAME=$1
 FLAG_CALC=$2
-${SCRIP_DIR}/calc_Tdump.py ${NAME} "main"
-${SCRIP_DIR}/coolfunc_for_lxcalc.sh  T_dump_tmp.dat A_dump_tmp.dat NH_dump_tmp.dat ${Z} cfunc_for_lxcalc.txt
+#${SCRIP_DIR}/calc_Tdump.py ${NAME} "main"
+#${SCRIP_DIR}/coolfunc_for_lxcalc.sh  T_dump_tmp.dat A_dump_tmp.dat NH_dump_tmp.dat ${Z} cfunc_for_lxcalc.txt
 
-#${SCRIP_DIR}/feedback.py ${NAME} cfunc_for_lxcalc.txt ${DM_CM} ${FLAG_CALC}
+${SCRIP_DIR}/feedback.py ${NAME} cfunc_for_lxcalc.txt ${DM_CM} ${FLAG_CALC}
 
 
