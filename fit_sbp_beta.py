@@ -66,11 +66,11 @@ def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array
         if r_array[i]==0:
             continue
         if flag_array[i]=='o':
-            sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_use_array)
+            sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_use_array,cm_per_pixel)
             sb_m=sb_m+bkg
             pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
         if flag_array[i]=='c':
-            sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_cuse_array)
+            sb_m=deproject_model.calc_sb(r_array[i],rmodel_array,den_array,cfunc_cuse_array,cm_per_pixel)
             pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
     return -pro
 
@@ -111,8 +111,8 @@ def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array
         for i in rne_array:
             if i==0:
                 continue
-            plot_y.append(deproject_model.calc_sb(i,rne_array,den,cfunc_use_array)+bkg)
-            plot_yc.append(deproject_model.calc_sb(i,rne_array,den,cfunc_cuse_array))
+            plot_y.append(deproject_model.calc_sb(i,rne_array,den,cfunc_use_array,cm_per_pixel)+bkg)
+            plot_yc.append(deproject_model.calc_sb(i,rne_array,den,cfunc_cuse_array,cm_per_pixel))
         sbp_sum_array.append(plot_y)
         sbpc_sum_array.append(plot_yc)
     sbp_sum_array=np.sort(sbp_sum_array,0)

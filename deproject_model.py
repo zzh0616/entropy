@@ -23,7 +23,7 @@ def calc_v_ring(rout,rin):
 ## rlist gives the outer raidus of each annuli
 ## the density and cooling function is the average of each annuli
 ## rlist[0]=den[0]=cool_func[0]=0
-def calc_sb(r,r_list,den,cool_func):
+def calc_sb(r,r_list,den,cool_func,cm_per_pixel):
     ne_np_ratio=1.2
     tot=len(r_list)
     r_use=-1
@@ -48,8 +48,8 @@ def calc_sb(r,r_list,den,cool_func):
                     r_list[r_use])+calc_v_ring(r_list[i-1],r_list[r_use])
 #            vol_total=vol_total+vol
             sb_tmp=sb_tmp+tmp_array[i]*vol
-        pixel_out=r_list[r_use]/cm_per_kpc
-        pixel_in=r_list[r_use-1]/cm_per_kpc
+        pixel_out=r_list[r_use]/cm_per_pixel
+        pixel_in=r_list[r_use-1]/cm_per_pixel
         area=pi*(pixel_out*pixel_out-pixel_in*pixel_in)
         sb_tmp=sb_tmp/area
 #        print(r_use,vol_total)
