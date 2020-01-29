@@ -18,6 +18,8 @@ from zzh_model import gpob
 import deproject_model
 import json
 import random
+from astropy.cosmology  import FlatLambdaCDM
+cosmo=FlatLambdaCDM(H0=71,Om0=0.27,Tcmb0=2.725)
 numpy.set_printoptions(linewidth=4900)
 def swap(a,b):
     return [b,a]
@@ -44,7 +46,7 @@ def adjust(par,p_min_array,p_max_array):
 #            [par[2],par[5]]=swap(par[2],par[5])
     return par
 
-def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model):
+def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,cm_per_pixel):
     pro=0
     par=adjust(par,p_min_array,p_max_array)
     den_array=[]
@@ -74,7 +76,7 @@ def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array
             pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
     return -pro
 
-def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array):
+def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array,cm_per_pixel):
     den_sum_array=[]
     sbp_sum_array=[]
     sbpc_sum_array=[]
@@ -129,7 +131,11 @@ def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array
     plt.savefig('sbp_beta_fit.pdf',dpi=100)
     return [den_sum_array[ind50],den_sum_array[ind16],den_sum_array[ind84]]
 
-def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
+def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z):
+    kpc_per_arcmin=cosmo.kpc_proper_per_arcmin(z).value
+    cm_per_kpc=3.0857e21
+    pixel_per_arcmin=121.9
+    cm_per_pixel=kpc_per_arcmin*cm_per_kpc/pixel_per_arcmin
     tmp1=list(range(0,11))
     tmp2=list(range(11,41,3))
     tmp3=list(range(41,3001,5))
@@ -295,14 +301,14 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file):
             sb_array_this=sb_array
         else:
             sb_array_this=shuffle(sb_array,sbe_array)
-        result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array_this,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model),method='Powell')
+        result=minimize(likehood,p0,args=(p_min_array,p_max_array,rne_array,r_array,sb_array_this,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,cm_per_pixel),method='Powell')
         adjust(result.x,p_min_array,p_max_array)
         print(result.x)
-        init_pro=likehood(p0,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
-        final_pro=likehood(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model)
+        init_pro=likehood(p0,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,cm_per_pixel)
+        final_pro=likehood(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,cm_per_pixel)
         print(init_pro,final_pro)
         p_all.append(result.x)
-    sum_ne_array=plot_result(p_all,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array)
+    sum_ne_array=plot_result(p_all,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array,cm_per_pixel)
 #    if len(sys.argv)>4:
 #        fi=open(sys.argv[4],'a')
 #        print(result.x,file=fi)
@@ -349,5 +355,6 @@ if __name__=='__main__':
     cfunc_file=sys.argv[3]
     cfunc_cfile=sys.argv[4]
     json_file=sys.argv[5]
-    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file)
+    redshift=float(sys.argv[6])
+    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,redshift)
 
