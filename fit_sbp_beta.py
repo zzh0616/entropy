@@ -356,7 +356,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z,flag_ori_on
         np.save('beta_fit_result_all',p_all)
     else:
         plt.savefig('entropy_beta_compare_orionly.pdf')
-        plt.savefig('beta_fit_result_all_orionly',p_all)
+        np.save('beta_fit_result_all_orionly',p_all)
 
 if __name__=='__main__':
     param_file=sys.argv[2]
