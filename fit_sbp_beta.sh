@@ -3,6 +3,7 @@ NEW_PARAM_FILE=$2
 CENTER_ONLY=$3
 SBP_DATA_FILE="${NAME}_sbp.txt"
 JSON_FILE="${NAME}_plt.json"
+FLAG_ORI=$4
 z=`cat param_zzh_for_py.txt | grep '^z\s' | awk '{print $2}'`
 SBP_TYPE=`cat global.cfg | grep ^sbp_eninfo | awk '{print $4}'`
 if [ ${SBP_TYPE} = "CNT" ] ; then
@@ -28,4 +29,4 @@ bkg ${BKG_C} 0 ${BKG_UP}" > param_beta.txt
 
 fi
 
-~/scripts/entropy/fit_sbp_beta.py ${SBP_DATA_FILE} param_beta.txt ${CFUNC_FILE} cfunc_for_chandra_density_fit_cnt.txt ${JSON_FILE} ${z}
+~/scripts/entropy/fit_sbp_beta.py ${SBP_DATA_FILE} param_beta.txt ${CFUNC_FILE} cfunc_for_chandra_density_fit_cnt.txt ${JSON_FILE} ${z} ${FLAG_ORI}

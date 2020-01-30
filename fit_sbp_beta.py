@@ -76,7 +76,7 @@ def likehood(par,p_min_array,p_max_array,rmodel_array,r_array,sb_array,sbe_array
             pro=pro+gpob(sb_m,sb_array[i],sbe_array[i])
     return -pro
 
-def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array,cm_per_pixel):
+def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array,cm_per_pixel,flag_ori_only):
     den_sum_array=[]
     sbp_sum_array=[]
     sbpc_sum_array=[]
@@ -128,10 +128,13 @@ def plot_result(par,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array
     plt.fill_between(rne_array,sbp_sum_array[ind16],sbp_sum_array[ind84],color='r',alpha=0.3)
     plt.fill_between(rne_array,sbpc_sum_array[ind16],sbpc_sum_array[ind84],color='b',alpha=0.3)
     plt.legend()
-    plt.savefig('sbp_beta_fit.pdf',dpi=100)
+    if flag_ori_only=="0":
+        plt.savefig('sbp_beta_fit.pdf',dpi=100)
+    else:
+        plt.savefig('sbp_beta_fit_orionly.pdf',dpi=100)
     return [den_sum_array[ind50],den_sum_array[ind16],den_sum_array[ind84]]
 
-def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z):
+def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z,flag_ori_only):
     kpc_per_arcmin=cosmo.kpc_proper_per_arcmin(z).value
     cm_per_kpc=3.0857e21
     pixel_per_arcmin=121.9
@@ -167,16 +170,18 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z):
     cfunc_use_array.append(0)
     for i in open(sbp_data_file):
         tmp=i.split()
-        r_array.append(float(tmp[0]))
-        re_array.append(float(tmp[1]))
-        sb_array.append(float(tmp[2]))
-        sbe_array.append(float(tmp[3]))
-        flag_array.append(tmp[4])
+        if flag_ori_only=="0" or tmp[4]=="o":
+            r_array.append(float(tmp[0]))
+            re_array.append(float(tmp[1]))
+            sb_array.append(float(tmp[2]))
+            sbe_array.append(float(tmp[3]))
+            flag_array.append(tmp[4])
     r_array=numpy.array(r_array)
     re_array=numpy.array(re_array)
     sb_array=numpy.array(sb_array)
     sbe_array=numpy.array(sbe_array)
     sbe_array=sbe_array+sb_array*0.1
+    print(sb_array)
 
     for i in open(param_file,'r'):
         if re.match(r'^n01\s',i):
@@ -346,8 +351,12 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z):
     plt.fill_between(rne_array,kori_array_down,kori_array_up,alpha=0.3)
     plt.legend()
     plt.xlim(10,2000)
-    plt.savefig('entropy_beta_compare.pdf')
-    np.save('beta_fit_result_all',p_all)
+    if flag_ori_only=='0':
+        plt.savefig('entropy_beta_compare.pdf')
+        np.save('beta_fit_result_all',p_all)
+    else:
+        plt.savefig('entropy_beta_compare_orionly.pdf')
+        plt.savefig('beta_fit_result_all_orionly',p_all)
 
 if __name__=='__main__':
     param_file=sys.argv[2]
@@ -356,5 +365,6 @@ if __name__=='__main__':
     cfunc_cfile=sys.argv[4]
     json_file=sys.argv[5]
     redshift=float(sys.argv[6])
-    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,redshift)
+    flag_ori_only=sys.argv[7]
+    main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,redshift,flag_ori_only)
 
