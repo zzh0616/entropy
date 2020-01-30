@@ -313,7 +313,7 @@ def main(sbp_data_file,param_file,cfunc_file,cfunc_cfile,json_file,z,flag_ori_on
         final_pro=likehood(result.x,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,cm_per_pixel)
         print(init_pro,final_pro)
         p_all.append(result.x)
-    sum_ne_array=plot_result(p_all,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array,cm_per_pixel)
+    sum_ne_array=plot_result(p_all,p_min_array,p_max_array,rne_array,r_array,sb_array,sbe_array,cfunc_use_array,cfunc_cuse_array,flag_array,model,re_array,cm_per_pixel,flag_ori_only)
 #    if len(sys.argv)>4:
 #        fi=open(sys.argv[4],'a')
 #        print(result.x,file=fi)
