@@ -322,17 +322,19 @@ def main(mode,listfile):
                 out=(rsbp_array).max()/r200
                 name_use=f.split(',')[1]
                 plt.loglog(r_entropy,k_entropy,lw=1)
-                plt.fill_between(r_entropy,k_entropy_down,k_entropy_up,color='grey')
+                plt.fill_between(r_entropy,k_entropy_down*0.96,k_entropy_up*1.04,color='grey')
                 plt.plot([out,out],[0.01,10],color='green',linestyle='--',alpha=0.5,lw=1)
 #                plt.plot([r500/r200,r500/r200],[0.01,10],color='k',lw=0.3)
                 plt.text(0.09,1.8,name_use,fontsize=5)
 #                plt.yticks(ticks=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5],labels=['','0.2','','','0.5','','','','','','1.0','','','','',''],fontsize=9)
 
-                x=[0.1,1.5]
-                y=[0.112,2.202]
+                x=np.array([0.1,2.0])
+                y=np.array([0.12,3.40])
                 plt.xlim(0.07,2.2)
                 plt.ylim(0.05,5)
-                plt.loglog(x,y,'k',lw=0.5)
+                plt.loglog(x,y,'k-',lw=0.5)
+#                plt.loglog(x,y*1.15,'k-',lw=0.5)
+
             if mode == "4":
                 c_factor_array=np.power(1+r_model/R200_0,cp_p)*np.exp(r_model/R200_0*(cp_e))+0+cp_g0*np.exp(-(r_model/R200_0-cp_x0)*(r_model/R200_0-cp_x0)/cp_sigma)
                 if c_factor_array.min()<0.95:

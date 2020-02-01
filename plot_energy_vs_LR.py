@@ -56,16 +56,16 @@ for f in open(sys.argv[1],'r'):
             m500=np.float(i.split()[1])
             m500_down=m500-np.float(i.split()[2])
             m500_up=np.float(i.split()[3])-m500
-    filename=f+'/bcg_dist.txt'
-    fi=open(filename)
-    dist=float(fi.read()[0:-1])
-    fi.close()
+#    filename=f+'/bcg_dist.txt'
+#    fi=open(filename)
+#    dist=float(fi.read()[0:-1])
+#    fi.close()
     flag_uplimit_array.append(flag_upper)
     tcool_array.append(tcool)
     csb_array.append(csb)
     csbe_array.append(csbe)
-    dist_array.append(dist)
-    diste_array.append(dist*0.1)
+#    dist_array.append(dist)
+#    diste_array.append(dist*0.1)
     m500_array.append(m500)
     m500_down_array.append(m500_down)
     m500_up_array.append(m500_up)
@@ -171,7 +171,8 @@ for f in open(sys.argv[1],'r'):
         gamma0=p[3][j]
         n2=p[0][j]
         kori_array=a0*np.power(r_array,gamma0)+k0
-        kfit=np.delete(kfit_array[j],0)
+#        kfit=np.delete(kfit_array[j],0)
+        kfit=np.array(kfit_array[j])
         EICM_array=n2*T_array[j]*(kfit-kori_array)/kfit
 #        print(Efeed_array)
         EICM_new_array=reassign(r_new_array,r_array,EICM_array)
@@ -215,29 +216,30 @@ SUM_Efeed_array=np.array(SUM_Efeed_array)
 #Efeed_center=SUM_Efeed_array[int(len(SUM_Efeed_array)/2)]
 #Efeed_up=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.84)]
 #Efeed_down=SUM_Efeed_array[int(len(SUM_Efeed_array)*0.16)]
-[Efeed_center,Efeed_down,Efeed_up]=analyze_db.sum_error_calc(SUM_Efeed_array,SUM_Efeed_array_down,SUM_Efeed_array_up)
+[Efeed_center,Efeed_down,Efeed_up]=analyze_db.sum_error_calc(SUM_Efeed_array,SUM_Efeed_array_down,SUM_Efeed_array_up,0.98)
 #print(Efeed_center)
-#plt.semilogx(r_scaled_array,Efeed_center)
-SUM_CC_Efeed_array=np.array(SUM_CC_Efeed_array)
+plt.loglog(r_scaled_array,Efeed_center)
+plt.fill_between(r_scaled_array,Efeed_down,Efeed_up+0.1,color='grey',alpha=0.7)
+#SUM_CC_Efeed_array=np.array(SUM_CC_Efeed_array)
 #SUM_CC_Efeed_array.sort(0)
 #Efeed_CC_center=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)/2)]
 #Efeed_CC_up=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)*0.84)]
 #Efeed_CC_down=SUM_CC_Efeed_array[int(len(SUM_CC_Efeed_array)*0.16)]
-[Efeed_CC_center,Efeed_CC_down,Efeed_CC_up]=analyze_db.sum_error_calc(SUM_CC_Efeed_array,SUM_CC_Efeed_array_down,SUM_CC_Efeed_array_up)
-plt.semilogx(r_scaled_array,Efeed_CC_center,'b')
-SUM_NCC_Efeed_array=np.array(SUM_NCC_Efeed_array)
+#[Efeed_CC_center,Efeed_CC_down,Efeed_CC_up]=analyze_db.sum_error_calc(SUM_CC_Efeed_array,SUM_CC_Efeed_array_down,SUM_CC_Efeed_array_up)
+#plt.semilogx(r_scaled_array,Efeed_CC_center,'b')
+#SUM_NCC_Efeed_array=np.array(SUM_NCC_Efeed_array)
 #SUM_NCC_Efeed_array.sort(0)
 #Efeed_NCC_center=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)/2)]
 #Efeed_NCC_up=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.84)]
 #Efeed_NCC_down=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.16)]
-[Efeed_NCC_center,Efeed_NCC_down,Efeed_NCC_up]=analyze_db.sum_error_calc(SUM_NCC_Efeed_array,SUM_NCC_Efeed_array_down,SUM_NCC_Efeed_array_up)
-plt.loglog(r_scaled_array,Efeed_NCC_center,'r')
-plt.xlim(0.03,2)
+#[Efeed_NCC_center,Efeed_NCC_down,Efeed_NCC_up]=analyze_db.sum_error_calc(SUM_NCC_Efeed_array,SUM_NCC_Efeed_array_down,SUM_NCC_Efeed_array_up)
+#plt.loglog(r_scaled_array,Efeed_NCC_center,'r')
+plt.xlim(0.05,2)
 plt.ylim(0.05,50)
-plt.fill_between(r_scaled_array,Efeed_CC_down,Efeed_CC_up+0.1,color='blue',alpha=0.7)
-plt.fill_between(r_scaled_array,Efeed_NCC_down,Efeed_NCC_up+0.1,color='red',alpha=0.3)
-plt.xlabel('Radius r/r200')
-plt.ylabel('feedback energy per particle (kev)')
+#plt.fill_between(r_scaled_array,Efeed_CC_down,Efeed_CC_up+0.1,color='blue',alpha=0.7)
+#plt.fill_between(r_scaled_array,Efeed_NCC_down,Efeed_NCC_up+0.1,color='red',alpha=0.3)
+plt.xlabel(r'Radius ($r/r_{200}$)')
+plt.ylabel('Feedback energy per particle (kev)')
 plt.savefig('Efeedback_vs_Radius.pdf')
 
 plt.clf()
@@ -288,13 +290,13 @@ plt.legend()
 plt.savefig('kc_vs_csb.pdf')
 plt.clf()
 
-plt.loglog(kc_array,dist_array,'+')
-plt.xlabel('central entropy (kev cm^2)')
-plt.ylabel('distance between bcg and cluster X-ray center (Mpc)')
-plt.ylim(0.001,1)
+#plt.loglog(kc_array,dist_array,'+')
+#plt.xlabel('central entropy (kev cm^2)')
+#plt.ylabel('distance between bcg and cluster X-ray center (Mpc)')
+#plt.ylim(0.001,1)
 #plt.xlim(10,500)
-plt.savefig('kc_vs_dist.pdf')
-plt.clf()
+#plt.savefig('kc_vs_dist.pdf')
+#plt.clf()
 for f in open(sys.argv[1],'r'):
     f=f[0:-1]
     filename=f+'/'+f+'_result.csv'
