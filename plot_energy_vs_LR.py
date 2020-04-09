@@ -105,20 +105,20 @@ for i in range(len(m500_array)):
     if flag_uplimit_array[i]==0:
 #        print(m500_array[i],energy_array[i],m500_down_array[i],m500_up_array[i],energy_down_array[i],energy_up_array[i])
         plt.errorbar(m500_array[i],energy_array[i],xerr=[[m500_down_array[i]],[m500_up_array[i]]],yerr=[[energy_down_array[i]],[energy_up_array[i]]],linestyle='none',color='royalblue')
-        plt.loglog(m500_array[i],energy_array[i],'*',color='gold')
+        plt.loglog(m500_array[i],energy_array[i],'*',color='gold',markersize=5)
     else:
         plt.errorbar(m500_array[i],energy_up_array[i],xerr=[[m500_down_array[i]],[m500_up_array[i]]],yerr=[[energy_up_array[i]*0.3],[energy_up_array[i]]],uplims=True,color='royalblue')
-plt.ylim(1e68,2e72)
-m500_ref_array=np.linspace(1,100,1000)#*1e13
+plt.ylim(1e69,1e73)
+m500_ref_array=np.linspace(5,500,1000)#*1e13
 mbh=1e9*np.power(10,-1.08+1.24*np.log10(m500_ref_array))
 #mbh=np.power(10,-9.56+1.39*np.log10(m500_ref_array))
 eta=0.02
 feedsl=mbh*eta*3e8*3e8*2e30/1.6e-16
-plt.loglog(m500_ref_array*1e13,feedsl,'k',label='eta=0.02')
+plt.loglog(m500_ref_array*1e13,feedsl,'k',label='feedback efficiency=0.02')
 plt.loglog(m500_ref_array*1e13,feedsl*np.power(10,0.99),'k--',lw=0.5)
 plt.loglog(m500_ref_array*1e13,feedsl/np.power(10,0.99),'k--',lw=0.5)
 plt.legend()
-plt.xlabel('m500 (Msun)')
+plt.xlabel(r'$M_{500}$ ($M_{\odot}$)')
 plt.ylabel('feedback energy (keV)')
 plt.savefig('m500_vs_feedback.pdf')
 plt.clf()
@@ -234,7 +234,7 @@ plt.fill_between(r_scaled_array,Efeed_down,Efeed_up+0.1,color='grey',alpha=0.7)
 #Efeed_NCC_down=SUM_NCC_Efeed_array[int(len(SUM_NCC_Efeed_array)*0.16)]
 #[Efeed_NCC_center,Efeed_NCC_down,Efeed_NCC_up]=analyze_db.sum_error_calc(SUM_NCC_Efeed_array,SUM_NCC_Efeed_array_down,SUM_NCC_Efeed_array_up)
 #plt.loglog(r_scaled_array,Efeed_NCC_center,'r')
-plt.xlim(0.05,2)
+plt.xlim(0.05,1.4)
 plt.ylim(0.05,50)
 #plt.fill_between(r_scaled_array,Efeed_CC_down,Efeed_CC_up+0.1,color='blue',alpha=0.7)
 #plt.fill_between(r_scaled_array,Efeed_NCC_down,Efeed_NCC_up+0.1,color='red',alpha=0.3)

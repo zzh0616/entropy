@@ -321,8 +321,8 @@ def main(mode,listfile):
 #                plt.loglog(r_model/r200,k_ori/k_norm,'b',alpha=0.1)
                 out=(rsbp_array).max()/r200
                 name_use=f.split(',')[1]
-                plt.loglog(r_entropy,k_entropy,lw=1)
-                plt.fill_between(r_entropy,k_entropy_down*0.96,k_entropy_up*1.04,color='grey')
+                plt.loglog(r_entropy,k_entropy,lw=1,color='b')
+                plt.fill_between(r_entropy,k_entropy_down*0.96,k_entropy_up*1.04,color='lightblue',alpha=1)
                 plt.plot([out,out],[0.01,10],color='green',linestyle='--',alpha=0.5,lw=1)
 #                plt.plot([r500/r200,r500/r200],[0.01,10],color='k',lw=0.3)
                 plt.text(0.09,1.8,name_use,fontsize=5)

@@ -62,7 +62,8 @@ if diff>0:
 if mode == '2':
     fig.text(0.45,0.08,r'Radius (${\rm r/r_{200}}$)')
     fig.text(0.02,0.4,r'Entropy (${\rm K/K(r_{500})}$)',rotation=90)
-    blue_line=matplotlib.lines.Line2D([],[])
+    blue_line=matplotlib.lines.Line2D([],[],color='b')
+    blue_patch=matplotlib.patches.Patch(color='lightblue',lw=2)
     orange_line=matplotlib.lines.Line2D([],[],color='orange')
     black_line=matplotlib.lines.Line2D([],[],color='k')
     green_line=matplotlib.lines.Line2D([],[],color='green',linestyle='--',alpha=0.5)
@@ -71,7 +72,7 @@ if mode == '2':
     grey_patch=matplotlib.patches.Patch(color='grey',lw=2)
     z=np.random.randn(10)
     black_cross=matplotlib.lines.Line2D([],[],color='k',marker='+',markersize=5,markerfacecolor='k',linestyle='none')
-    plt.legend(handles=[(grey_patch,blue_line),black_line,green_line],labels=['fitted entropy profile','baseline entropy','outermost radius of FoV'],fontsize=6,loc='upper center',bbox_to_anchor=(-1.5+diff,-0.6),ncol=6)
+    plt.legend(handles=[(blue_patch,blue_line),black_line,green_line],labels=['fitted entropy profile','baseline entropy','outermost radius of FoV'],fontsize=6,loc='upper center',bbox_to_anchor=(-1.5+diff,-0.6),ncol=6)
     fig.savefig('entropy_subfig.pdf')
 if mode == '1t':
     fig.text(0.45,0.03,'Radius (kpc)')
