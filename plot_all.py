@@ -321,16 +321,21 @@ def main(mode,listfile):
 #                plt.loglog(r_model/r200,k_ori/k_norm,'b',alpha=0.1)
                 out=(rsbp_array).max()/r200
                 name_use=f.split(',')[1]
-                plt.loglog(r_entropy,k_entropy,lw=1,color='b')
-                plt.fill_between(r_entropy,k_entropy_down*0.96,k_entropy_up*1.04,color='lightblue',alpha=1)
-                plt.plot([out,out],[0.01,10],color='green',linestyle='--',alpha=0.5,lw=1)
+                i_use=0
+                for i in range(len(r_entropy)):
+                    if r_entropy[i]>out:
+                        i_use=i+1;
+                        break
+                plt.loglog(r_entropy[0:i_use],k_entropy[0:i_use],lw=1,color='b')
+                plt.fill_between(r_entropy[0:i_use],k_entropy_down[0:i_use]*0.96,k_entropy_up[0:i_use]*1.04,color='lightblue',alpha=1)
+#                plt.plot([out,out],[0.01,10],color='green',linestyle='--',alpha=0.5,lw=1)
 #                plt.plot([r500/r200,r500/r200],[0.01,10],color='k',lw=0.3)
                 plt.text(0.09,1.8,name_use,fontsize=5)
 #                plt.yticks(ticks=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5],labels=['','0.2','','','0.5','','','','','','1.0','','','','',''],fontsize=9)
 
                 x=np.array([0.1,2.0])
                 y=np.array([0.12,3.40])
-                plt.xlim(0.07,2.2)
+                plt.xlim(0.07,1.5)
                 plt.ylim(0.05,5)
                 plt.loglog(x,y,'k-',lw=0.5)
 #                plt.loglog(x,y*1.15,'k-',lw=0.5)

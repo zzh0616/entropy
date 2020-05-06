@@ -203,6 +203,7 @@ def main(name,sum_array=[]):
                 reffi_2[p_this]=reffi_2[p_this]+np.power(csbp_fit-csbp_array[j],2)
     merr=0.15+te_array.sum()/t_array.sum()
     reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
+    reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
 
     reffi_1=reffi_1*reffi_1*400
 #print(reffi_1,reffi_2)

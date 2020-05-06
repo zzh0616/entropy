@@ -114,9 +114,9 @@ mbh=1e9*np.power(10,-1.08+1.24*np.log10(m500_ref_array))
 #mbh=np.power(10,-9.56+1.39*np.log10(m500_ref_array))
 eta=0.02
 feedsl=mbh*eta*3e8*3e8*2e30/1.6e-16
-plt.loglog(m500_ref_array*1e13,feedsl,'k',label='feedback efficiency=0.02')
-plt.loglog(m500_ref_array*1e13,feedsl*np.power(10,0.99),'k--',lw=0.5)
-plt.loglog(m500_ref_array*1e13,feedsl/np.power(10,0.99),'k--',lw=0.5)
+plt.loglog(m500_ref_array*1e13,feedsl,'k',label=r'$\eta_{\rm feed}=0.02$')
+plt.loglog(m500_ref_array*1e13,feedsl*2,'k-.',lw=0.5,label=r'$\eta_{\rm feed}=0.04$')
+plt.loglog(m500_ref_array*1e13,feedsl/2,'k--',lw=0.5,label=r'$\eta_{\rm feed}=0.01$')
 plt.legend()
 plt.xlabel(r'$M_{500}$ ($M_{\odot}$)')
 plt.ylabel('feedback energy (keV)')
