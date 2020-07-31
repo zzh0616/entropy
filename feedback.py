@@ -316,8 +316,8 @@ def main():
             elif flag1==1:
                 if flag2==0:
                     if r_array[j]<=0.5*r500:
-                        t_tmp=t_tmp+T_array[j]
-                        count=count+1
+                        t_tmp=t_tmp+T_array[j]*r_array[j]*r_array[j]
+                        count=count+r_array[j]*r_array[j]
                     else:
                         flag2=1
         if count==0:
@@ -427,6 +427,7 @@ def main():
     dq_scaled_array_tot=np.array([sum_dq_scaled_array[ind_50],sum_dq_scaled_array[ind_16],sum_dq_scaled_array[ind_84]])
     np.save('Efeed_scaled_array',Efeed_scaled_array_tot)
     np.save('dq_scaled_array',dq_scaled_array_tot)
+
 
 
 if __name__ == "__main__":

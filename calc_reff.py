@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-from zzh_model import gpob
-from numpy.random import random
-import zzh_model
-import deproject_model
-import modnfw_readarray
 from modnfw_readarray import lintp
-import matplotlib.pyplot as plt
 import sys
 import math
 import numpy
@@ -161,8 +155,8 @@ def main(name,sum_array=[]):
     rmass_array=numpy.insert(rmass_array,1,20)
     mass_model=reassign(rmass_array,rne_array,mfit_array_center)
     nbin=0
-    reffi_1=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array)+len(rcsbp_array))
-    reffi_2=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array)+len(rcsbp_array))
+    reffi_1=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array)*0+len(rcsbp_array))
+    reffi_2=np.zeros(len(rsbp_array)+len(r_array)+len(rmass_array)*0+len(rcsbp_array))
     for i in range(len(sum_t_array)):
 #    print(i)
         t_fit_array=reassign(r_array,rne_array, sum_t_array[i])
@@ -188,29 +182,30 @@ def main(name,sum_array=[]):
             p_this=len(rsbp_array)+j
             reffi_1[p_this]=reffi_1[p_this]+np.power(t_this-t_model_this,2)
             reffi_2[p_this]=reffi_2[p_this]+np.power(t_this-t_array[j],2)
-        for j in range(len(rmass_array)):
-            if rmass_array[j]>=30:
-                Mnfw_model=nfw_fitted_array[j]
-                M_this=mass_array[j]
-                p_this=len(rsbp_array)+len(r_array)+j
-                reffi_1[p_this]=reffi_1[p_this]+np.power(Mnfw_model-mass_model[j],2)
-                reffi_2[p_this]=reffi_2[p_this]+np.power(Mnfw_model-M_this,2)
+#        for j in range(len(rmass_array)):
+#            if rmass_array[j]>=30:
+#                Mnfw_model=nfw_fitted_array[j]
+#                M_this=mass_array[j]
+#                p_this=len(rsbp_array)+len(r_array)+j
+#                reffi_1[p_this]=reffi_1[p_this]+np.power(Mnfw_model-mass_model[j],2)
+#                reffi_2[p_this]=reffi_2[p_this]+np.power(Mnfw_model-M_this,2)
         if flag_csbp:
             for j in range(len(rcsbp_array)):
                 csbp_fit=csbp_fit_array[j]
-                p_this=len(rsbp_array)+len(r_array)+len(rmass_array)+j
+                p_this=len(rsbp_array)+len(r_array)+len(rmass_array)*0+j
                 reffi_1[p_this]=reffi_1[p_this]+np.power(csbp_fit-csbp_model_array[j],2)
                 reffi_2[p_this]=reffi_2[p_this]+np.power(csbp_fit-csbp_array[j],2)
     merr=0.15+te_array.sum()/t_array.sum()
-    reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
-    reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
+#    reffi_1=np.append(np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(mass_model)*0.20),np.array(csbpe_array)+np.array(csbp_array)*0.10)
+    reffi_1=np.append(np.append(np.array(sbpe_array)+np.array(sbp_array)*0.10,np.array(te_array)+np.array(t_array)*0.08),np.array(csbpe_array)+np.array(csbp_array)*0.10)
 
     reffi_1=reffi_1*reffi_1*400
 #print(reffi_1,reffi_2)
     reffi=1-reffi_2/reffi_1
 #    print(reffi)
-    reff=reffi.sum()/(len(t_array)+len(rsbp_array)+len(rmass_array)+len(rcsbp_array))
+    reff=reffi.sum()/(len(t_array)+len(rsbp_array)+len(rmass_array)*0+len(rcsbp_array))
 #    print(reff)
+    print(reff)
     return reff
 if __name__=='__main__':
     name=sys.argv[1]

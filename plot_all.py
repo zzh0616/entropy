@@ -33,11 +33,15 @@ def main(mode,listfile):
             sum_knew_ncc_array=[]
         if mode == "1":
             pp=PdfPages('all.pdf')
+        if mode == "4":
+            sum_cfactor_array=[]
         if mode == "5":
             count5=0
             tmp_name=1
         for f in open(listfile):
             name=f.split(',')[0]
+            if name[-1]=='\n':
+                name=name[0:-1]
 #           print(name)
             #name=sys.argv[2]
             json_file = name+"/"+name+"_plt.json"
@@ -88,6 +92,7 @@ def main(mode,listfile):
                 rte_array[0] = rte_array[0]*0.99
             r_model = dat["radius_model"]
             r_model = np.array(r_model,dtype=float)
+            r_cfactor_array=r_model/r500
             sbp_fit = dat["sbp_model"][0]
             sbp_fit = np.array(sbp_fit)
             sbp_fit_down = dat["sbp_model"][1]
@@ -341,21 +346,22 @@ def main(mode,listfile):
 #                plt.loglog(x,y*1.15,'k-',lw=0.5)
 
             if mode == "4":
-                c_factor_array=np.power(1+r_model/R200_0,cp_p)*np.exp(r_model/R200_0*(cp_e))+0+cp_g0*np.exp(-(r_model/R200_0-cp_x0)*(r_model/R200_0-cp_x0)/cp_sigma)
+                c_factor_array=np.power(1+r_cfactor_array*r500/r200,cp_p)*np.exp(r_cfactor_array*r500/r200*(cp_e))+0+cp_g0*np.exp(-(r_cfactor_array*r500/r200-cp_x0)*(r_cfactor_array*r500/r200-cp_x0)/cp_sigma)
                 if c_factor_array.min()<0.95:
                     print(name)
                     for ii in range(len(c_factor_array)):
                         if c_factor_array[ii]<=1:
                             c_factor_array[ii]=1
 #                continue
-                c_factor_array=np.sqrt(c_factor_array)
+#                c_factor_array=np.sqrt(c_factor_array)
                 if t_ave <= 4:
                     color='b'
                 elif t_ave <=7 :
                     color='g'
                 else:
                     color='r'
-                plt.plot(r_model/r200,c_factor_array,color='grey',linewidth=0.4)
+#                plt.plot(r_cfactor_array,c_factor_array,color='grey',linewidth=0.4)
+                sum_cfactor_array.append(c_factor_array)
         if mode == "2":
             pylab.figure('k_global')
             sum_knew_cc_array=np.array(sum_knew_cc_array)
@@ -388,20 +394,28 @@ def main(mode,listfile):
 #            plt.ylabel('Entropy ($k/k(0.3r_{200})$)')
 #            plt.savefig('entropy_totalvsgravity.pdf')
         if mode == "4":
-            plt.xlim(0,1)
+            plt.xlim(0.0,1)
+            sum_cfactor_array=np.array(sum_cfactor_array)
+            sum_cfactor_array.sort(0)
+            cfactor_array_cent=sum_cfactor_array[8]
+            cfactor_array_up=sum_cfactor_array[3]
+            cfactor_array_low=sum_cfactor_array[14]
+            plt.plot(r_cfactor_array,cfactor_array_cent,'b')
+            plt.fill_between(r_cfactor_array,cfactor_array_low,cfactor_array_up,color='grey')
 #        plt.ylim(0.5,3)
-            plt.xlabel(r'Radius (r/${\rm r_{200}}$)')
-            plt.ylabel(r'$(<\rho^2>/<\rho>^2)^{0.5}$')
-            reference_factor=np.sqrt(np.power(1+r_model/R200_0,-3.7)*np.exp(r_model/R200_0*(3.7))+2.0*np.exp(-(r_model/R200_0-0.018)*(r_model/R200_0-0.018)/0.0002))
-            plt.plot(r_model/r200,reference_factor,'b')
+            plt.xlabel(r'Radius (r/${\rm r_{500}}$)')
+            plt.ylabel(r'$C(r)^{0.5}$')
+            reference_factor=np.power(1+r_model/R200_0,-3.7)*np.exp(r_model/R200_0*(3.7))+1.4*np.exp(-(r_model/R200_0-0.018)*(r_model/R200_0-0.018)/0.0002)
+#            plt.plot(r_model/r200,reference_factor,'b')
             ax=plt.gca()
 #        ax.set_yticks([1,2,3,4,5,6,7,8,9,10])
 #        ax.set_yticklabels(('1','2','3','4','','6','','','','','10'))
-            ax.set_ylim(0.5,3)
-            plt.plot([0.03,0.13],[2.75,2.75],'b')
-            plt.plot([0.03,0.13],[2.50,2.50],'grey')
-            plt.text(0.15,2.73,'Reference clumping factor profile from Vazza+13',color='b')
-            plt.text(0.15,2.48,'Clumping factor profiles of sample clusters')
+            ax.set_ylim(1.0,3)
+#            ax.set_yscale('log')
+#            plt.plot([0.03,0.13],[2.75,2.75],'b')
+#            plt.plot([0.03,0.13],[2.50,2.50],'grey')
+#            plt.text(0.15,2.73,'Reference clumping factor profile from Vazza+13',color='b')
+#            plt.text(0.15,2.48,'Clumping factor profiles of sample clusters')
             plt.savefig('clumping_factor.pdf')
     return 0
 

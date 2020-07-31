@@ -68,8 +68,8 @@ else
     ${SCRIP_DIR}/../density/calc_T_profile.py param_tmp.txt T_dump_tmp.dat
 fi
 
-#${SCRIP_DIR}/coolfunc_calc.sh  T_dump_tmp.dat ${ABUND_DUMP_FILE} ${NH_DUMP_FILE} ${REDSHIFT} cfunc_for_density_fit_cnt.txt ${E_LOW} ${E_HIGH} cfunc_for_density_fit_erg.txt
-#${SCRIP_DIR}/coolfunc_calc.sh  T_dump_tmp.dat ${ABUND_DUMP_FILE} ${NH_DUMP_FILE} ${REDSHIFT} cfunc_for_chandra_density_fit_cnt.txt 0.7 7.0 cfunc_for_chandra_density_fit_erg.txt
+${SCRIP_DIR}/coolfunc_calc.sh  T_dump_tmp.dat ${ABUND_DUMP_FILE} ${NH_DUMP_FILE} ${REDSHIFT} cfunc_for_density_fit_cnt.txt ${E_LOW} ${E_HIGH} cfunc_for_density_fit_erg.txt
+${SCRIP_DIR}/coolfunc_calc.sh  T_dump_tmp.dat ${ABUND_DUMP_FILE} ${NH_DUMP_FILE} ${REDSHIFT} cfunc_for_chandra_density_fit_cnt.txt 0.7 7.0 cfunc_for_chandra_density_fit_erg.txt
 if [ "${FLAG}" = "OLD" ]; then
     cp cfunc_for_densit_fit_cnt.txt cfunc_for_density_fit.txt
 fi
